@@ -1,0 +1,98 @@
+.\" generated with Ronn-NG/v0.8.0
+.\" http://github.com/apjanke/ronn-ng/tree/0.8.0
+.TH "VINCA" "1" "December 2021" "" ""
+.SH "NAME"
+\fBvinca\fR \- simple spaced repetition
+.SH "SYNOPSIS"
+Vinca is a command line flashcard program\. It is used to create and review information according to the principles of spaced repetition\.
+.SH "TL;DR"
+.TP
+\fBvinca 2\fR
+create a simple question and answer card
+.TP
+\fBvinca r\fR
+review your collection of cards
+.SH "QUICKSTART"
+Use \fBvinca b\fR to open the browser\. Then read the BROWSER HOTKEYS section\.
+.SH "BROWSER HOTKEYS"
+.SS "Navigation"
+.nf
+j       scroll down one card
+k       scroll up one card
+q       close the browser
+.fi
+.SS "Hotkeys which effect the selected card (usually lowercase)"
+.nf
+e       edit the card
+d       delete the card
+r       review the card
+s       summarize the card
+t       edit the card\'s tags
++       postpone the card until tomorrow
+E       edit the card\'s metadata
+M       print the card\'s metadata
+.fi
+.SS "Review"
+.nf
+R       Review all the cards in the browser from the selected card onward
+.fi
+.SH "TUTORIAL"
+.SS "Main Idea: the NOUN VERB syntax"
+Vinca uses a NOUN VERB syntax\. The two kinds of nouns are a \fIcollection\fR of cards and a specific \fIcard\fR\.
+.SS "Examples of NOUN VERB syntax\."
+.TP
+\fBvinca col browse\fR
+\fIcol\fR is the noun; it refers to the entire collection of cards\. \fIbrowse\fR is the verb; it launches the browser for this collection of cards\.
+.TP
+\fBvinca col review\fR
+\fIcol\fR is the noun; \fIreview\fR is the verb\.
+.TP
+\fBvinca lc edit\fR
+\fIlc\fR is the noun; it refers to the most recently created card ("last\-card") \fIedit\fR is the verb; this command will edit the most recently created card
+.TP
+\fBvinca lc delete\fR
+\fIlc\fR is the noun; it refers to the most recently created card ("last\-card") \fIdelete\fR is the verb; this command will delete the card we just created
+.SS "Chaining"
+If the output of a command is a noun we can apply a verb to it\.
+.SS "Examples of Chaining"
+.TP
+\fBvinca col sort due\-date browse\fR
+\fBcol sort due\-date\fR returns a list of cards sorted by due\-date\. We then open a browser with these cards to browse these cards sorted by due\-date\.
+.TP
+\fBvinca col findall Lincoln delete\fR
+\fBcol findall Lincoln\fR returns a list of cards containing the word Lincoln\. This command will delete all of them\.
+.SS "Indexing"
+We can refer to a card by its position in a collection\. \fINOTE\fR: indicies begin at 0 not 1\.
+.SS "Examples of Indexing"
+Suppose \fBvinca findall Lincoln\fR returns the following list of cards:
+.IP "" 4
+.nf
+\- Who is the 16th American president? | Lincoln
+\- What was Lincoln\'s first name? | Abraham
+.fi
+.IP "" 0
+.P
+Then we can reference these cards by their index:
+.IP "" 4
+.nf
+* `vinca findall Lincoln \- 1 delete`:
+    This will erase the card asking for Lincoln\'s first name\.
+
+* `vinca findall Lincoln \- 0 review`:
+    This will review the first card\.
+.fi
+.IP "" 0
+.SS "Exceptions to the NOUN VERB syntax"
+The most import abbreviation is the ommission of \fIcol\fR\.
+.IP "" 4
+.nf
+\- `vinca purge` is equivalent `vinca col purge`
+\- `vinca count` is equivalent to `vinca col count`
+.fi
+.IP "" 0
+.P
+The set\-cards\-path command is used to specify a directory which vinca will search for cards\.
+.SS "Learning More"
+Read through \fBvinca col \-\-help\fR and \fBvinca lc \-\-help\fR to learn all the possible subcommands for collections and cards\.
+.SH "AUTHOR"
+olaird25@gmail\.com

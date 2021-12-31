@@ -1,0 +1,121 @@
+Leaches
+- is_leach is a function of the scheduler and the card history
+
+uninstall function removes from .config/vinca/config.json
+uninstall removes the vinca-module wherever it is installed
+it does not remove the cards folder, but it does leave a message
+
+h to review previous card, u to undo grade
+only add to history and reschedule the card if it was due !!
+2 types of memory in vinca: recall ability; known to exist
+Definition of waste: all learning of card order, phrasing, etc.
+undo grade
+allow fire to do slicing of iterables (a sliced cardlist would need to return a cardlist)
+A new scheduler: never (helpful for making notes)
+A new generator: note (just a text file, with the never scheduler and no reviewer because it is never reviewed; or less)
+Why make this part of vinca at all? I can search; sort by date; tag; associate
+Another scheduler: see it enough to remember it exists (i.e. reminder) (lower mental load)
+decks are either saved commands ( I have  to interfere with fire )
+or they are just a tag nothing more
+I do not yet see why I will need tags but I will leave them in place for now.
+cardlist should be a subclass of list
+• I can get the documentation purer in manpage and tabcompletions
+fire should accept slices for iterables
+Defense of the compound question:
+- the time to load the subject into memory is non-zero, but of zero value
+- a compound question reviews two pieces of material and this loading is only done once.
+think about inheritance and making the editor and reviewer abstract classes
+principle: the questions should be unambiguous for someone who did not create them
+manually transfer cards from anki to vinca
+Another tagging idea: allow for hidden words in {} so that tags can be added at the end but left invisible.
+A PYTHON VIM SPREADSHEET APP:
+• s is a subclass of array
+• column headers are used to create a named,tuple of cols like s.cols.date
+• dynamic setting like s.cols.date = [i for i in range(100)]
+• an init script which cannot reference the spreadsheet
+• cells are the evaluated ltr ttb
+• values can be hardcoded with the $ key
+• good support for dates
+• cells can be arbitrary python objects
+• formula class contains python code like =sum(cell.column[:cell.row_num])
+a --show flag for the purge command
+a --show flag for the purge command
+card-creation-time statistics
+rethink what you want to see and look at usage stats for your commands
+*** cacheing strategy: use symlinks to the directories themselves
+this
+ends addition
+,p
+set the card difficulty ( a way to warn that the answer is long )
+set the card timer with custom pace for each card in metadata or generated from history
+grade without seeing all lines on a verses card
+
+
+1,095,000 is 100 cards per day over 30 years. Suppose creation time is ~30s makes 50m.
+This is ~1000 reviews per day in the period. With ~4s review is 66m.
+(So two hours a day is the approximate cost of 1M cards)
+Could I show the distribution of these cards among the main categories (language, poetry, history, philosophy, life).
+
+No matter the approach: SQL, json, anything else, 1M cards is too many. Yes, I can use the default "soon" collection which makes use of symlinks, but this is less convenient when I want to find a reference card. It requires caching, which is some amount of code.
+My preferred way is to launch a single vinca instance.
+E.g. the instance reads from a fifo. Running a vinca command on the command line attaches the vinca instance to the terminal and writes the command and arguments to the fifo. When the vinca instance is done it automatically detaches itself from the terminal.
+-- To do this I would need to write my own equivalent of python fire (I do not think this would be that hard.)
+-- This would make it easy to implement a vinca 'mode' in which many commands are run consecutively.
+-- small: this would make it easy to preserve line_history and yank_history of the custom vim editor.
+
+
+How to read 1M cards from json in 25s:
+Current speed is 10c / 1ms ⇒ 10000c / s
+⇒ 100s to read 1M cards
+This can be easily multiprocessed. So x4.
+Since reading the json files into python objects is the most time consuming part,
+I could possibly write a C script which is a "fragile json reader"
+making use of the idea that I know exactly where the data I need is ; (what specific bytes)
+In fact, I might add create-date and time to metadata and move the history into a separate file.
+-- → (This obeys the unix principle of flat, tabular data, the json is then all one line and the history is a tsv).
+
+
+make filter commands on the cardlist toplevel? (i.e. get rid of filter command)
+
+The idea of a network of facts
+The inner ones are safe (how can I forget that Constantine called the council of Nice if I know it was called in 325 and that he entered it with humilit?)
+The outer ones are exposed and must form an adamantine phalanx. (Strong "surface tension"; the surface tension of knowledge)
+Vinca protects the frontiers.
+.
+
+Marks as good and continue; (i.e. alias for hitting the space bar twice)
+LARGE
+-----
+MULTICOLOR STATISTICS
+-> like anki, colored squares
+-> previous review density
+-> cards created over time
+-> cards learned over time
+3/4 screen is the past 1/4 screen is the future
+--I go downward not across
+--numbers are given on the right.
+--or I do go across and right my numbers downards
+solve overgrading issues
+---- why? less dead space
+time today: 1h
+date		creation	review		forecast
+<unicode block left side> [number]
+...
+...
+cards / day:  	56		123		150
+time / day:
+total:
+total time:
+-- Internals --
+---------------
+- create virtual cards with history and due_date but nothing else
+- process the collection day by day
+-
+- make a histogram based on creation-date
+- intervals are day, week, month, and year.
+-
+- create a binary (pixel) representation
+- translate to quadrants
+
+red and blue should be used in displaying the card itself not just for the cardlist. (this is done by going into the string method of the card and checking if the output is a tty. If it is we wrap the thing in colors.)
+A regulate command which would operate on a cardlist and distribute the due dates more evenly with a +-2 day allowance. (Optimized for a minimum of rescheduling.)
