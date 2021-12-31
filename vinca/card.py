@@ -28,17 +28,13 @@ class Card:
 			self.init_new_card()
 		# hotkeys are available from the browser
 		self._hotkeys = {'e': self.edit,
-				'H': self.print_history,
-				'E': self.edit_metadata,
-				'M': self.print_metadata,
+				'u': self.undo_history,
+				'H': self.edit_history,
+				'M': self.edit_metadata,
 				't': self.edit_tags,
 				'd': self.delete,
-				'r': self.review,
+				'p': self.preview,
 				'+': self.postpone}
-		# Some of the hotkeys display information
-		# These commands will require acknowledgment from the user before
-		# The browser goes ahead and clears the screen
-		self._confirm_exit_commands = (self.print_metadata, self.print_history)
 
 	def init_loaded_card(self, path):
 		self.path = path
@@ -55,9 +51,6 @@ class Card:
 		# easy access to the last created card
 		config.last_card_path = self.path
 
-
-	def print_history(self):
-		print(self.history)
 
 	@property
 	def metadata_path(self):
@@ -110,6 +103,20 @@ def {m}(self, new_val):
 		self.save_metadata() 
 		self.schedule()
 
+	def preview(self):
+		reviewers.review(self)
+		# we have probably appended a history entry
+		self.undo_history()
+
+	def undo_history(self):
+		# Undo the most recent entry in the card's review history.
+		if len(self.history) == 1:
+			print('Review history of this card is already at the beginning')
+			return
+		self.history.pop()
+		self.save_metadata()
+		self.due_date = TODAY
+
 	def make_string(self):
 		self.string = reviewers.make_string(self)
 
@@ -122,6 +129,7 @@ def {m}(self, new_val):
 		subprocess.run(['vim',self.path/'metadata.json'])
 		self.load_metadata()
 		self.make_string()
+	edit_history = edit_metadata
 
 	def print_metadata(self):
 		if not self.metadata_is_loaded:

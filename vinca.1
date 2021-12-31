@@ -13,7 +13,7 @@ create a simple question and answer card
 \fBvinca r\fR
 review your collection of cards
 .SH "QUICKSTART"
-Use \fBvinca b\fR to open the browser\. Then read the BROWSER HOTKEYS section\.
+Use \fBvinca browse\fR to open the browser\. Then read the BROWSER HOTKEYS section\.
 .SH "BROWSER HOTKEYS"
 .SS "Navigation"
 .nf
@@ -21,20 +21,26 @@ j       scroll down one card
 k       scroll up one card
 q       close the browser
 .fi
-.SS "Hotkeys which effect the selected card (usually lowercase)"
+.SS "Card Generation"
+.nf
+2       create a simple question and answer ("two\-line") card
+v       create a verses card
+.fi
+.SS "Reviewing"
+.nf
+r       Review all the cards in the browser\.
+q       Exit a review session and return to the browser
+.fi
+.SS "Other"
 .nf
 e       edit the card
 d       delete the card
-r       review the card
-s       summarize the card
 t       edit the card\'s tags
+p       preview the card without grading it
+u       undo the card\'s most recent grade
 +       postpone the card until tomorrow
-E       edit the card\'s metadata
-M       print the card\'s metadata
-.fi
-.SS "Review"
-.nf
-R       Review all the cards in the browser from the selected card onward
+M       edit the card\'s metadata
+H       edit the card\'s history
 .fi
 .SH "TUTORIAL"
 .SS "Main Idea: the NOUN VERB syntax"
@@ -75,10 +81,10 @@ Suppose \fBvinca findall Lincoln\fR returns the following list of cards:
 Then we can reference these cards by their index:
 .IP "" 4
 .nf
-* `vinca findall Lincoln \- 1 delete`:
+* `vinca findall Lincoln 1 delete`:
     This will erase the card asking for Lincoln\'s first name\.
 
-* `vinca findall Lincoln \- 0 review`:
+* `vinca findall Lincoln 0 review`:
     This will review the first card\.
 .fi
 .IP "" 0

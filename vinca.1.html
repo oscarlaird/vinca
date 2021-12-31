@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' content='text/html;charset=utf8'>
+  <meta name='generator' content='Ronn-NG/v0.8.0 (http://github.com/apjanke/ronn-ng/tree/0.8.0)'>
+  <title>vinca(1) - simple spaced repetition</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#TL-DR">TL;DR</a>
+    <a href="#QUICKSTART">QUICKSTART</a>
+    <a href="#BROWSER-HOTKEYS">BROWSER HOTKEYS</a>
+    <a href="#TUTORIAL">TUTORIAL</a>
+    <a href="#AUTHOR">AUTHOR</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>vinca(1)</li>
+    <li class='tc'></li>
+    <li class='tr'>vinca(1)</li>
+  </ol>
+
+  
+
+<h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>vinca</code> - <span class="man-whatis">simple spaced repetition</span>
+</p>
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p>Vinca is a command line flashcard program.
+It is used to create and review information
+according to the principles of spaced repetition.</p>
+
+<h2 id="TL-DR">TL;DR</h2>
+
+<dl>
+<dt><code>vinca 2</code></dt>
+<dd>  create a simple question and answer card</dd>
+<dt><code>vinca r</code></dt>
+<dd>  review your collection of cards</dd>
+</dl>
+
+
+<h2 id="QUICKSTART">QUICKSTART</h2>
+
+<p>Use <code>vinca browse</code> to open the browser. Then read the BROWSER HOTKEYS section.</p>
+
+<h2 id="BROWSER-HOTKEYS">BROWSER HOTKEYS</h2>
+
+<h3 id="Navigation">Navigation</h3>
+
+<pre><code>j       scroll down one card
+k       scroll up one card
+q       close the browser
+</code></pre>
+
+<h3 id="Card-Generation">Card Generation</h3>
+
+<pre><code>2       create a simple question and answer ("two-line") card
+v       create a verses card
+</code></pre>
+
+<h3 id="Reviewing">Reviewing</h3>
+
+<pre><code>r       Review all the cards in the browser.
+q       Exit a review session and return to the browser
+</code></pre>
+
+<h3 id="Other">Other</h3>
+
+<pre><code>e       edit the card
+d       delete the card
+t       edit the card's tags
+p       preview the card without grading it
+u       undo the card's most recent grade
++       postpone the card until tomorrow
+M       edit the card's metadata
+H       edit the card's history
+</code></pre>
+
+<h2 id="TUTORIAL">TUTORIAL</h2>
+
+<h3 id="Main-Idea-the-NOUN-VERB-syntax">Main Idea: the NOUN VERB syntax</h3>
+
+<p>Vinca uses a NOUN VERB syntax. The two kinds of nouns are a <em>collection</em> of cards and a specific <em>card</em>.</p>
+
+<h3 id="Examples-of-NOUN-VERB-syntax-">Examples of NOUN VERB syntax.</h3>
+
+<dl>
+<dt><code>vinca col browse</code></dt>
+<dd>  <em>col</em> is the noun; it refers to the entire collection of cards.
+  <em>browse</em> is the verb; it launches the browser for this collection of cards.</dd>
+<dt><code>vinca col review</code></dt>
+<dd>  <em>col</em> is the noun; <em>review</em> is the verb.</dd>
+<dt><code>vinca lc edit</code></dt>
+<dd>  <em>lc</em> is the noun; it refers to the most recently created card ("last-card")
+  <em>edit</em> is the verb; this command will edit the most recently created card</dd>
+<dt><code>vinca lc delete</code></dt>
+<dd>  <em>lc</em> is the noun; it refers to the most recently created card ("last-card")
+  <em>delete</em> is the verb; this command will delete the card we just created</dd>
+</dl>
+
+
+<h3 id="Chaining">Chaining</h3>
+
+<p>If the output of a command is a noun we can apply a verb to it.</p>
+
+<h3 id="Examples-of-Chaining">Examples of Chaining</h3>
+
+<dl>
+<dt><code>vinca col sort due-date browse</code></dt>
+<dd>  <code>col sort due-date</code> returns a list of cards sorted by due-date. We then open a browser with these cards to browse these cards sorted by due-date.</dd>
+<dt><code>vinca col findall Lincoln delete</code></dt>
+<dd>  <code>col findall Lincoln</code> returns a list of cards containing the word Lincoln. This command will delete all of them.</dd>
+</dl>
+
+
+<h3 id="Indexing">Indexing</h3>
+
+<p>We can refer to a card by its position in a collection.
+<em>NOTE</em>: indicies begin at 0 not 1.</p>
+
+<h3 id="Examples-of-Indexing">Examples of Indexing</h3>
+
+<p>Suppose <code>vinca findall Lincoln</code> returns the following list of cards:</p>
+
+<pre><code>- Who is the 16th American president? | Lincoln
+- What was Lincoln's first name? | Abraham
+</code></pre>
+
+<p>Then we can reference these cards by their index:</p>
+
+<pre><code>* `vinca findall Lincoln 1 delete`:
+    This will erase the card asking for Lincoln's first name.
+
+* `vinca findall Lincoln 0 review`:
+    This will review the first card.
+</code></pre>
+
+<h3 id="Exceptions-to-the-NOUN-VERB-syntax">Exceptions to the NOUN VERB syntax</h3>
+
+<p>The most import abbreviation is the ommission of <em>col</em>.</p>
+
+<pre><code>- `vinca purge` is equivalent `vinca col purge`
+- `vinca count` is equivalent to `vinca col count`
+</code></pre>
+
+<p>The set-cards-path command is used to specify a directory which vinca will search for cards.</p>
+
+<h3 id="Learning-More">Learning More</h3>
+
+<p>Read through <code>vinca col --help</code> and <code>vinca lc --help</code> to learn all the possible subcommands for collections and cards.</p>
+
+<h2 id="AUTHOR">AUTHOR</h2>
+
+<p>olaird25@gmail.com</p>
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>December 2021</li>
+    <li class='tr'>vinca(1)</li>
+  </ol>
+
+  </div>
+</body>
+</html>

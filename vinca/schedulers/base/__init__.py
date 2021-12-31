@@ -59,7 +59,7 @@ def schedule(history):
 	if history.last_grade == 'easy':
 		return history.last_date + (history.last_interval * 3) + DAY
 	# TODO: An idea for grouping cards of a similar subject i.e. made on the same day
-	# Round to the nearest multiple of 100 days after card creation if this is within 5% of the interval
+	# Round to the nearest multiple of 100 days after card creation if this is within 10% of the interval
 
 if __name__ == '__main__':
 	import doctest

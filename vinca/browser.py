@@ -119,9 +119,6 @@ class Browser():
 			if command := self.selected_card._hotkeys.get(k):
 				with AlternateScreen():
 					command()
-					if command in self.selected_card._confirm_exit_commands:
-						print('\npress any key to continue')
-						readkey()
 
 			if generator := generators_dict.get(k):
 				with AlternateScreen():
