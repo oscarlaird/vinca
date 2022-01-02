@@ -18,7 +18,11 @@ class Cardlist:
 	@classmethod
 	def from_directory(cls, directory):
 		directory = Path(directory) # I would probably want Python FIRE to automatically cast paths
-		return cls([Card(p) for p in directory.iterdir()])
+		# the directory contains directories which represent cards
+		# I might want to manage my cards folder with git
+		# so I ignore .git
+		card_paths = (p for p in directory.iterdir() if p.name != '.git') 
+		return cls([Card(p) for p in card_paths])
 
 
 	def __init__(self, _cards):
