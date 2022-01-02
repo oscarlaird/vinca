@@ -5,7 +5,7 @@ import importlib
 def edit(card):
 	start = datetime.datetime.now()
 
-	m = importlib.import_module('.' + card.editor, package = 'vinca.editors')
+	m = importlib.import_module('.' + card.editor, package = 'vinca._editors')
 	m.edit(card)
 
 	stop = datetime.datetime.now()

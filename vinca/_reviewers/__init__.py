@@ -18,7 +18,7 @@ def review(card):
 
 	# dynamically import the required reviewer module
 	# a specifc reviewer is responsible for returning a key to the generic reviewer
-	m = importlib.import_module('.'+card.reviewer, package = 'vinca.reviewers')
+	m = importlib.import_module('.'+card.reviewer, package = 'vinca._reviewers')
 	key = m.review(card)  # the reviewer gives back the key
 
 	stop = time.time()
@@ -29,7 +29,7 @@ def review(card):
 	card.history.append_entry(TODAY, elapsed, grade)
 
 def make_string(card):
-	m = importlib.import_module('.'+card.reviewer, package = 'vinca.reviewers')
+	m = importlib.import_module('.'+card.reviewer, package = 'vinca._reviewers')
 	assert hasattr(m, 'make_string'), f'{card.reviewer} must implement \
 		the make_string method to represent this card on the command line'
 	return m.make_string(card)

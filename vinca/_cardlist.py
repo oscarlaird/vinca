@@ -14,7 +14,6 @@ from vinca._tag_caching import tags_cache
 TODAY = datetime.date.today()
 
 class Cardlist:
-	''' this is a collection of cards. most of the user interface takes place through the browser '''
 
 	@classmethod
 	def from_directory(cls, directory):

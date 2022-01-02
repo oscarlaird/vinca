@@ -43,7 +43,7 @@ help = '''\
 vinca --help              general help
 vinca filter --help       help on a specific subcommand
 man vinca                 vinca tutorial
-online_help		  online man page'''
+vinca online_help	  online man page'''
 online_help = 'https://oscarlaird.github.io/vinca-SRS/vinca.1.html'
 about = '''
                                ┌─────────────┐
