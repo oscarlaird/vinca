@@ -1,6 +1,17 @@
+# ignore my particular vinca files
 vinca/config.json
+vinca/tags
+
+# ignore directories created when packaging for pip
 build
 dist
-.swp
 vinca.egg-info
+
+# exclude vim's .swp files in case I forget
+*.swp
+
+# ignore pyc files
+# ignore all __pycache__ directories
 **/__pycache__
+# and exclude .pyc files just for good measure
+*.pyc
