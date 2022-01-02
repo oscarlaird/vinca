@@ -1,3 +1,5 @@
 vinca/config.json
 build
 dist
+.swp
+vinca.egg-info
