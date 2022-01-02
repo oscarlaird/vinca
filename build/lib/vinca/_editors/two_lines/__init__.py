@@ -1,4 +1,4 @@
-from vinca.lib.vinput import VimEditor
+from vinca._lib.vinput import VimEditor
 
 def edit(card):
 	front_path = (card.path / 'front')

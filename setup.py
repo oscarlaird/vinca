@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
 	name="vinca",
-	version="129",
+	version="130",
 	author="Oscar Laird", 
 	data_files = [('man/man1', ['vinca.1'])],
 	include_package_data = True,

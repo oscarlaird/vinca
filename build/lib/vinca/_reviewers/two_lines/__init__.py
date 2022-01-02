@@ -1,6 +1,6 @@
 
-from vinca.lib.terminal import AlternateScreen
-from vinca.lib.readkey import readkey
+from vinca._lib.terminal import AlternateScreen
+from vinca._lib.readkey import readkey
 
 def make_string(card):
 	f = ' / '.join((card.path / 'front').read_text().splitlines())

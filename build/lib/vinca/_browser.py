@@ -1,7 +1,7 @@
-from vinca.lib import ansi
-from vinca.lib.terminal import LineWrapOff, AlternateScreen
-from vinca.lib.readkey import readkey, keys
-from vinca.generators import generators_dict
+from vinca._lib import ansi
+from vinca._lib.terminal import LineWrapOff, AlternateScreen
+from vinca._lib.readkey import readkey, keys
+from vinca._generators import generators_dict
 
 FRAME_WIDTH = 6
 

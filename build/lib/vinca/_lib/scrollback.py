@@ -4,9 +4,9 @@ The idea was going to be to create a wrapper for a function which would intercep
 
 import sys
 import functools
-from vinca.lib import ansi
-from vinca.lib.terminal import count_screen_lines
-from vinca.lib.readkey import readkey
+from vinca._lib import ansi
+from vinca._lib.terminal import count_screen_lines
+from vinca._lib.readkey import readkey
 
 class Intercepter:
 	def __init__(self):

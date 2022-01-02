@@ -1,4 +1,4 @@
-from vinca.lib import ansi
+from vinca._lib import ansi
 import re
 import shutil
 

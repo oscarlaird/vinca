@@ -1,4 +1,4 @@
-from vinca.card import Card
+from vinca._card import Card
 
 def two_lines():
 	''' make a simple question and answer card '''

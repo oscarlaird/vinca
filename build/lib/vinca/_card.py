@@ -6,12 +6,12 @@ DAY = datetime.timedelta(days=1)
 from pathlib import Path
 from shutil import copytree
 
-from vinca import reviewers, editors, schedulers 
-from vinca.tag_caching import tags_cache
-from vinca.config import config
-from vinca.lib.vinput import VimEditor
-from vinca.lib.random_id import random_id
-from vinca.history import History, HistoryEntry
+from vinca import _reviewers, _editors, _schedulers 
+from vinca._tag_caching import tags_cache
+from vinca._config import config
+from vinca._lib.vinput import VimEditor
+from vinca._lib.random_id import random_id
+from vinca._history import History, HistoryEntry
 
 class Card:
 	# Card class can load without 
@@ -98,13 +98,13 @@ def {m}(self, new_val):
 		return self.string
 
 	def review(self):
-		reviewers.review(self)
+		_reviewers.review(self)
 		# we have probably appended a history entry
 		self.save_metadata() 
 		self.schedule()
 
 	def preview(self):
-		reviewers.review(self)
+		_reviewers.review(self)
 		# we have probably appended a history entry
 		self.undo_history()
 
@@ -118,10 +118,10 @@ def {m}(self, new_val):
 		self.due_date = TODAY
 
 	def make_string(self):
-		self.string = reviewers.make_string(self)
+		self.string = _reviewers.make_string(self)
 
 	def edit(self):
-		editors.edit(self) 
+		_editors.edit(self) 
 		self.make_string()
 		self.save_metadata() # we have probably modified history
 
@@ -140,7 +140,7 @@ def {m}(self, new_val):
 			print(f'{k:20}', v, sep='', end='\n')
 
 	def schedule(self):
-		dd = schedulers.schedule(name=self.scheduler, history=self.history)
+		dd = _schedulers.schedule(name=self.scheduler, history=self.history)
 		if dd:
 			self.due_date = dd
 

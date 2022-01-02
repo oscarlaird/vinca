@@ -1,4 +1,4 @@
-from vinca.card import Card
+from vinca._card import Card
 
 def verses():
 	''' make a card which quizzes one line at a time\nfor poetry, oratory, recipes '''

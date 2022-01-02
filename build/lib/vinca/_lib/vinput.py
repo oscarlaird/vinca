@@ -7,9 +7,9 @@ the duration of the vinca_session.
 import re
 import string
 
-from vinca.lib import ansi
-from vinca.lib import terminal
-from vinca.lib.readkey import readkey, keys
+from vinca._lib import ansi
+from vinca._lib import terminal
+from vinca._lib.readkey import readkey, keys
 
 # TODO dff cft &c. 
 # TODO dot repeat

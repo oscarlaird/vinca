@@ -1,2 +1,2 @@
-#!/bin/fish
-python -m vinca $argv
+#!/bin/sh
+python -m fire vinca

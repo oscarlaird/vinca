@@ -3,14 +3,14 @@ import datetime
 from random import random
 from shutil import copytree, rmtree
 from pathlib import Path
-from vinca.card import Card
-from vinca.browser import Browser
-from vinca.lib import ansi
-from vinca.lib.vinput import VimEditor
-from vinca.lib.readkey import readkey
-from vinca.lib import casting
-from vinca.config import config
-from vinca.tag_caching import tags_cache
+from vinca._card import Card
+from vinca._browser import Browser
+from vinca._lib import ansi
+from vinca._lib.vinput import VimEditor
+from vinca._lib.readkey import readkey
+from vinca._lib import casting
+from vinca._config import config
+from vinca._tag_caching import tags_cache
 TODAY = datetime.date.today()
 
 class Cardlist:
@@ -136,10 +136,11 @@ class Cardlist:
 		   due_after, due_before,
 		   editor, reviewer, scheduler,
 		   deleted_only, due_only, new_only)):
-			print('You must specify a filtering predicate. For example:\n'
+			print('Examples:\n'
 			      'vinca filter --new                       New Cards\n'
 			      'vinca filter --editor verses             Poetry Cards\n'
 			      'vinca filter --created-after -7          Cards created in the last week.\n'
+			      '\n'
 			      'Consult `vinca filter --help` for a complete list of predicates')
 			exit()
 		

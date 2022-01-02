@@ -1,6 +1,6 @@
 from pathlib import Path
-import vinca.card
-from vinca.config import config
+import vinca._card
+from vinca._config import config
 
 vinca_path = Path(__file__).parent
 tags_path = vinca_path / 'tags'
