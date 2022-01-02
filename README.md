@@ -11,5 +11,5 @@ It is similar to programs like ANKI and Supermemo.
 
 ## Vinca Tutorial
 
-Refer to the file `vinca.1.ronn` for a detailed tutorial on using vinca.
+Refer to [the man page](https://oscarlaird.github.io/vinca-SRS/vinca.1.html) for a detailed tutorial on using vinca.
 
