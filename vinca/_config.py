@@ -10,14 +10,20 @@ class Config(dict):
 	def __init__(self):
 		if not self.path.exists():
 			self.path.touch()
-			dump(default_config, self.path.open('w'))
+			json.dump(self.default_config, self.path.open('w'))
 		dict.__init__(self, self.load())
 		if not self.cards_path.exists():
 			self.cards_path.mkdir()
 	
 	def load(self):
-		with open(self.path) as f:
-			return json.load(f)
+		try:
+			with open(self.path) as f:
+				return json.load(f)
+		except json.decoder.JSONDecodeError:
+			print(f'Error decoding json file {self.path}')
+			self.path.unlink() # delete config.json
+			print('File has been deleted. Hopefully this solves the problem.')
+			exit()
 
 	def save(self):
 		with open(self.path,'w') as f:

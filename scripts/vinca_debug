@@ -1,2 +1,2 @@
 #!/bin/sh
-python -im fire vinca
+python -im fire vinca $@
