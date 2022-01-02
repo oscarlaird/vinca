@@ -1,7 +1,7 @@
 # vinca-SRS
 
 `VINCA` is a command-line driven spaced-repetition study tool.
-It is similar to programs like ANKI and Supermemo.
+It is the command-line cousin of ANKI and Supermemo.
 
 ## Installing Vinca
 
