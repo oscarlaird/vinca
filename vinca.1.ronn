@@ -4,7 +4,7 @@ vinca - simple spaced repetition
 SYNOPSIS
 --------
 Vinca is a command line flashcard program.
-It is used to create and review information
+It is used to create and review study cards
 according to the principles of spaced repetition.
 
 TL;DR
@@ -30,7 +30,7 @@ BROWSER HOTKEYS
 ### Reviewing
 	r		Review all the cards in the browser.
 	q		Exit a review session and return to the browser
-### Other
+### Management
 	e		edit the card
 	d		delete the card
 	t		edit the card's tags

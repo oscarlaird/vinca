@@ -1,12 +1,15 @@
 import setuptools
 
-
-
 setuptools.setup(
-    name="vinca",
-    version="1.1.120",
-    author="Oscar Laird", 
-    data_files = [('man/man1', ['vinca.1'])],
-    include_package_data = True,
-    packages=setuptools.find_packages(),
+	name="vinca",
+	version="129",
+	author="Oscar Laird", 
+	data_files = [('man/man1', ['vinca.1'])],
+	include_package_data = True,
+	install_requires = ['fire'],
+	packages=setuptools.find_packages(),
+	scripts=[
+	    'scripts/vinca',
+	    'scripts/vinca_debug',
+	   ]
 )

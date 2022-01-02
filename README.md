@@ -5,9 +5,9 @@ It is similar to programs like ANKI and Supermemo.
 
 ## Installing Vinca
 
-Python Fire is a requirement. Run `pip install fire`.
-Download this repository.
-Within this repository execute `python -m vinca`.
+- Python Fire is a requirement. Run `pip install fire`.
+- Download this repository.
+- Within this repository execute `python -m vinca`.
 
 ## Vinca Tutorial
 
