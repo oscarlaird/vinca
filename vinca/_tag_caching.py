@@ -1,5 +1,5 @@
+''' cache card tags for use in tab completions '''
 from pathlib import Path
-import vinca._card
 from vinca._config import config
 
 vinca_path = Path(__file__).parent
@@ -12,12 +12,9 @@ class TagsCache(list):
 		tags = tags_path.read_text().splitlines()
 		super().__init__(tags)
 
-	def update(self):
-		'rebuild the tags list'
-		# TODO a collector module
-		all_cards = [vinca.card.Card(p.name) for p in config.cards_path.iterdir()] 
-		self[:] = [tag for card in all_cards for tag in card.tags]
-		self.save()
+	def update(self, new_tag_list):
+		self[:] = new_tag_list
+		self._save()
 
 	def save(self):
 		tags_path.write_text('\n'.join(self))

@@ -6,6 +6,7 @@ from vinca._cardlist import Cardlist as _Cardlist
 from vinca._card import Card as _Card
 from vinca._config import config as _config
 from vinca._generators import generators_dict as _generators_dict
+from vinca._tag_caching import tags_cache as _tags_cache
 
 # load the card generators into the module
 for _hotkey, _generator_func in _generators_dict.items():
@@ -25,11 +26,11 @@ for _method_name, _method in _inspect.getmembers(col):
 
 # create a few utility collections
 # by writing them as lambda functions they are only evaluated if I need them
-new = lambda: col.filter(new_only = True)
+new = lambda: col.filter(new= True)
 new.__doc__ = 'Your new cards'
-deleted = lambda: col.filter(deleted_only = True)
+deleted = lambda: col.filter(deleted= True)
 deleted.__doc__ = 'Your deleted cards'
-due = lambda: col.filter(due_only = True)
+due = lambda: col.filter(due= True)
 due.__doc__ = 'Your due cards'
 recent = rs  = lambda: col.sort('seen-date')
 recent.__doc__ = 'Your cards sorted with the most recently seen ones at the top.'
@@ -82,6 +83,13 @@ lc = last_card = _Card(path = _lcp) if _lcp_exists else 'no last card'
 # move config.set_cards_path into globals
 set_cards_path = set_path = scp = _config.set_cards_path
 cards_path = path = cp = _config.cards_path
+
+class Advanced:
+	''' A set of rarely used advanced commands '''
+	def update_tags(self):
+		tags = collection.tags
+		_tags_cache.update(tags)
+		return tags
 
 '''
 Add the following code to the ActionGroup object in helptext.py of fire to get proper aliasing

@@ -149,11 +149,11 @@ def {m}(self, new_val):
 
 	def delete(self):
 		self.deleted = True
-		print('Card has been deleted. Use `vinca last-card restore` to undo.')
+		return 'Card has been deleted. Use `vinca last-card restore` to undo.'
 
 	def restore(self):
 		self.deleted = False
-		print('Card restored.')
+		return 'Card restored.'
 
 	def due_as_of(self, date):
 		return self.due_date <= date
@@ -168,7 +168,7 @@ def {m}(self, new_val):
 	def postpone(self, n=1):
 		tomorrow = TODAY + DAY*n
 		self.due_date = tomorrow
-		print(f'Postponed until {self.due_date}. (Use `vinca last-card postpone -1` to undo).')
+		return f'Postponed until {self.due_date}. (Use `vinca last-card postpone -1` to undo).'
 
 	@property
 	def create_date(self):

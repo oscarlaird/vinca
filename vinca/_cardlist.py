@@ -69,7 +69,7 @@ class Cardlist:
 
 	def review(self):
 		''' Review your cards. '''
-		due_cards = self.filter(due_only = True)
+		due_cards = self.filter(due = True)
 		Browser(due_cards).review()
 				
 	def add_tag(self, tag):
@@ -85,14 +85,12 @@ class Cardlist:
 			# TODO do this with set removal
 			card.save_metadata()  # metadata ops should be internal TODO
 
-	# @property
+	def tags(self):
+		return set([tag for card in self for tag in card.tags])
+
 	def count(self):
 		''' simple summary statistics '''
-	#	total_count = len(self)
-	#	due_count = len(self.filter(due_only=True))
-	#	print(f'total	{total_count}')
-	#	print(f'due	{due_count}')
-		return {'total': len(self), 'due': len(self.filter(due_only=True))}
+		return {'total': len(self), 'due': len(self.filter(due=True))}
 
 	def save(self, save_path):
 		''' Save cards to a specified folder '''
@@ -102,7 +100,7 @@ class Cardlist:
 
 	def purge(self):
 		''' Permanently delete cards marked for deletion. '''
-		deleted_cards = self.filter(deleted_only = True)
+		deleted_cards = self.filter(deleted= True)
 		if not deleted_cards:
 			print('No cards are marked for deletion.')
 			return
@@ -130,7 +128,7 @@ class Cardlist:
 		   seen_after=None, seen_before=None,
 		   due_after=None, due_before=None,
 		   editor=None, reviewer=None, scheduler=None,
-		   deleted_only=False, due_only=False, new_only=False,
+		   deleted=False, due=False, new=False,
 		   invert=False):
 		''' Filter the collection. Consult `vinca filter --help` for a full list of predicates.  '''
 		if not any((tag,
@@ -138,7 +136,7 @@ class Cardlist:
 		   seen_after, seen_before,
 		   due_after, due_before,
 		   editor, reviewer, scheduler,
-		   deleted_only, due_only, new_only)):
+		   deleted, due, new)):
 			print('Examples:\n'
 			      'vinca filter --new                       New Cards\n'
 			      'vinca filter --editor verses             Poetry Cards\n'
@@ -155,7 +153,7 @@ class Cardlist:
 		due_after = casting.to_date(due_after)
 		due_before = casting.to_date(due_before)
 
-		if due_only: due_before = TODAY
+		if due: due_before = TODAY
 
 		f = lambda card: (((not tag or tag in card.tags) and
 				(not created_after or created_after <= card.create_date) and
@@ -167,8 +165,8 @@ class Cardlist:
 				(not editor or editor == card.editor) and
 				(not reviewer or reviewer == card.reviewer) and
 				(not scheduler or scheduler == card.scheduler) and
-				(not deleted_only or card.deleted ) and
-				(not new_only or card.new)) ^
+				(not deleted or card.deleted ) and
+				(not new or card.new)) ^
 				invert)
 		
 		return self.__class__([c for c in self if f(c)])

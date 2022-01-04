@@ -119,3 +119,20 @@ total time:
 
 red and blue should be used in displaying the card itself not just for the cardlist. (this is done by going into the string method of the card and checking if the output is a tty. If it is we wrap the thing in colors.)
 A regulate command which would operate on a cardlist and distribute the due dates more evenly with a +-2 day allowance. (Optimized for a minimum of rescheduling.)
+Integrate with git enough to allow
+- a save command (commit with message 'review cards')
+- an upload command (will require authentication password in config probably)
+- a switch command (switch to a different deck) (should have tab completion eventually)
+- - a switch commadn would require autocomitting first
+Do I need to spread sibling cards apart or put them all on the same day?
+a generator for code cards with syntax highlightingwith syntax highlighting
+different schedulers for different card types e.g. language, medical, software
+these previous two and the succeeding are different form anki
+a review count prediction which is a little more intelligent
+the main thing is its permanence
+set a locked hour for card creation and review e.g. 9a - 10a
+lists:
+5 = 3 + 2
+frankly, 2 = 1 + 1
+idea of polunomial data retrieval: 4 pieces of information are split into 5 cards; I can forget any card and the other 4 can recover it. (This is the generalization of redundancy.)
+A good rule for deletion: is the card difficult to review.
