@@ -61,19 +61,23 @@ class Browser():
 		self.draw_browser()
 
 	def move(self, key):
-		if key in ('j',keys.DOWN) and self.sel < self.N - 1:
+		if key in ('j', keys.DOWN):
 			self.move_down()
-		if key in ('k',keys.UP) and self.sel > 0:
+		if key in ('k', keys.UP):
 			self.move_up()
 
 	def move_down(self):
+		if self.sel == self.N - 1:
+			return # we are already at the bottom
 		self.sel += 1
 		# scroll down if we are off the screen
 		self.frame += (self.frame + FRAME_WIDTH == self.sel)  
 	
 	def move_up(self):
+		if self.sel == 0:
+			return # we are already at the top
 		self.sel -= 1
-		# scroll down if we are off the screen
+		# scroll up if we are off the screen
 		self.frame -= (self.frame - 1 == self.sel)  
 
 	def review(self):
@@ -99,9 +103,11 @@ class Browser():
 						self.reviewing = False
 				# move down to the next due_card
 				while not self.selected_card.is_due:
-					self.move_down()
-					if self.sel >= self.N - 1:
+					# close the browser if we have reached the bottom
+					if self.sel == self.N - 1:
 						self.close_browser()
+					# move down to the next card
+					self.move_down()
 				continue # skip to the next cycle and do not read a key from the user
 
 			
