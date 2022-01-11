@@ -10,6 +10,7 @@ import string
 from vinca._lib import ansi
 from vinca._lib import terminal
 from vinca._lib.readkey import readkey, keys
+from vinca._lib.vinput.digraphs import digraphs
 
 # TODO dff cft &c. 
 # TODO dot repeat
@@ -19,20 +20,22 @@ class VimEditor:
         # will be shared across all instances of the class
         line_history = []
         yank_history = ['']
+
         green, red = ansi.codes['green'], ansi.codes['red']
         reset = ansi.codes['reset']
         mode_prompt_dict = {
         'normal':                     f'{red}[N]{reset} ',
-        'motion_pending':             f'{red}[N]{reset} ',
-        'search_char_pending':        f'{red}[N]{reset} ',
-        'replace_char_pending':       f'{red}[N]{reset} ',
         'insert':                     f'{green}[I]{reset} '}
-        MODES = ('normal','insert','motion_pending',
-                'search_char_pending', 'replace_char_pending')
+        MODES = ('normal','insert')
+        INSERT_SUBMODES = ('none', 'replace', 'tab_completing', 'digraph_pending')
+        NORMAL_SUBMODES = ('none', 'motion_pending', 'search_char_pending', 'replace_char_pending')
+        SUBMODES = INSERT_SUBMODES + NORMAL_SUBMODES
+
         OPERATORS = 'dcy~'
         MOTIONS = 'webftFT;,hl()0$_^'
         ACTIONS = 'sSru.xXDCpPYaiAIjk'
         DIGITS = '123456789'
+
         BOW = re.compile(       # BEGINNING OF WORD
                 '((?<=\s)|^)'   # pattern is preceded by whitespace or BOL
                 '\w')           # beginning of word is any alphanumeric.
@@ -49,6 +52,7 @@ class VimEditor:
         def __init__(self, text='', mode='default', prompt = '', completions = None):
                 self.text = text
                 self.mode = mode
+                self.submode = 'none'
                 if mode=='default':
                         if self.text:
                                 self.mode = 'normal'
@@ -80,18 +84,22 @@ class VimEditor:
                 # delimit the range of motion for an operation
                 self.start = None  
                 self.end = None
+                # misc.
+                self.digraph = ''
 
         def process_key(self, key):
+                assert self.mode in self.MODES and self.submode in self.SUBMODES
                 if self.mode == 'insert':
                         self.do_insert(key)
                 elif self.mode == 'normal':
-                        self.process_key_normal_mode(key)
-                elif self.mode == 'motion_pending':
-                        self.process_key_motion_pending_mode(key)
-                elif self.mode == 'search_char_pending':
-                        self.process_key_search_char_pending_mode(key)
-                elif self.mode == 'replace_char_pending':
-                        self.process_key_replace_char_pending_mode(key)
+                        if self.submode = 'none':
+                                self.process_key_normal_mode(key)
+                        elif self.submode == 'motion_pending':
+                                self.process_key_motion_pending_mode(key)
+                        elif self.submode == 'search_char_pending':
+                                self.process_key_search_char_pending_mode(key)
+                        elif self.submode == 'replace_char_pending':
+                                self.process_key_replace_char_pending_mode(key)
 
         def process_keys(self, keys, debug_id = 0):
                 self.debug_id = debug_id
@@ -118,7 +126,7 @@ class VimEditor:
                 self.save_state()
 
         def process_key_motion_pending_mode(self, key):
-                assert self.mode == 'motion_pending'
+                assert self.submode == 'motion_pending'
                 assert self.operator
                 # multiplier
                 if key in self.DIGITS:
@@ -167,7 +175,7 @@ class VimEditor:
                                 # performing the insertion.
                                 self.save_state()
                 elif key in self.OPERATORS:
-                        self.mode = 'motion_pending'
+                        self.submode = 'motion_pending'
                         self.operator = key
                 elif key in self.MOTIONS:
                         for _ in range(self.multiplier):
@@ -241,6 +249,24 @@ class VimEditor:
                 self.pos = BOW_idx + len(completion)
 
         def do_insert(self, key):
+                if self.submode == 'replace':
+                        raise NotImplementedError
+                if self.submode == 'digraph_pending':
+                        self.digraph += key
+                        if len(self.dirgaph) == 2:
+                                unicode_digraph = digraphs.get(self.digraph, '?')
+                                self.text = self.text[:self.pos] + key + self.text[self.pos:]
+                                self.current_insertion += key
+                                self.pos += 1
+                                # clean-up
+                                self.submode = 'none'
+                                self.digraph = ''
+                                return
+
+                if key = keys.CTRL_K:
+                        self.submode = digraph_pending
+                        return
+
                 if key == keys.ESC:
                         self.prev_insertion = self.current_insertion
                         self.save_state()
@@ -316,7 +342,7 @@ class VimEditor:
                 # jump to character
                 if key in ('f','F','t','T'):
                         self.char_jumper = key
-                        self.mode = 'search_char_pending'
+                        self.submode = 'search_char_pending'
                         return
                 # other motions
                 self.pos = {
@@ -353,7 +379,7 @@ class VimEditor:
                         if key == 's':
                                 self.text = self.text[:self.pos] + self.text[self.pos+1:]
                 if k == 'r':
-                        self.mode = 'replace_char_pending'
+                        self.submode = 'replace_char_pending'
                 # reversion and redoing
                 if k == 'u' and self.undo_stack:
                         # save current state
@@ -388,7 +414,7 @@ class VimEditor:
                         self.pos += len(self.yank)
                 # enter insert mode
                 if k in ('i','I','a','A'):
-                        self.mode = 'insert'
+                        self.submode = 'insert'
                         self.pos =  {'i': self.pos,
                                 'I': 0,
                                 'a': self.pos + 1,
