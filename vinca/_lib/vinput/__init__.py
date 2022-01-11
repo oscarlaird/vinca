@@ -6,6 +6,7 @@ the duration of the vinca_session.
 '''
 import re
 import string
+from math import ceil
 
 from vinca._lib import ansi
 from vinca._lib import terminal
@@ -26,6 +27,7 @@ class VimEditor:
         mode_prompt_dict = {
         'normal':                     f'{red}[N]{reset} ',
         'insert':                     f'{green}[I]{reset} '}
+        prompt_length = 4
         MODES = ('normal','insert')
         INSERT_SUBMODES = ('none', 'replace', 'tab_completing', 'digraph_pending')
         NORMAL_SUBMODES = ('none', 'motion_pending', 'search_char_pending', 'replace_char_pending')
@@ -88,11 +90,11 @@ class VimEditor:
                 self.digraph = ''
 
         def process_key(self, key):
-                assert self.mode in self.MODES and self.submode in self.SUBMODES
+                assert self.mode in self.MODES and self.submode in self.SUBMODES, f'bad mode {self.mode} and sub {self.submode}'
                 if self.mode == 'insert':
                         self.do_insert(key)
                 elif self.mode == 'normal':
-                        if self.submode = 'none':
+                        if self.submode == 'none':
                                 self.process_key_normal_mode(key)
                         elif self.submode == 'motion_pending':
                                 self.process_key_motion_pending_mode(key)
@@ -109,20 +111,22 @@ class VimEditor:
         def process_key_search_char_pending_mode(self, key):
                 assert self.char_jumper in ('f','F','t','T')
                 sc = self.search_char = key
-                if sc in '[].?':
+		# if the search character is a regex symbol itself
+		# se need to escape it
+                if sc in '()[].?':
                         sc = '\\' + sc
                 self.pos = {'f': self.idx(sc),
                             'F': self.idx(sc, back = True),
                             't': self.idx(f'.(?={sc})'),
                             'T': self.idx(f'(?<={sc}).', back = True),
                            }[self.char_jumper]
-                self.mode = 'normal'
+                self.submode = 'none'
 
         def process_key_replace_char_pending_mode(self, key):
                 before = self.text[:self.pos]
                 after  = self.text[self.pos+1:]
                 self.text = before + key + after
-                self.mode = 'normal'
+                self.submode = 'none'
                 self.save_state()
 
         def process_key_motion_pending_mode(self, key):
@@ -150,8 +154,8 @@ class VimEditor:
                         return  # invalid motion
                 self.do_operation()
                 self.thing_to_repeat = 'operation'
-                if self.mode == 'motion_pending':
-                        self.mode = 'normal'
+                if self.submode == 'motion_pending':
+                        self.submode = 'none'
                 if self.mode != 'insert':
                         # save state after performing an operation
                         # except if in insert mode,
@@ -253,18 +257,18 @@ class VimEditor:
                         raise NotImplementedError
                 if self.submode == 'digraph_pending':
                         self.digraph += key
-                        if len(self.dirgaph) == 2:
+                        if len(self.digraph) == 2:
                                 unicode_digraph = digraphs.get(self.digraph, '?')
-                                self.text = self.text[:self.pos] + key + self.text[self.pos:]
-                                self.current_insertion += key
+                                self.text = self.text[:self.pos] + unicode_digraph + self.text[self.pos:]
+                                self.current_insertion += unicode_digraph
                                 self.pos += 1
                                 # clean-up
                                 self.submode = 'none'
                                 self.digraph = ''
-                                return
+                        return
 
-                if key = keys.CTRL_K:
-                        self.submode = digraph_pending
+                if key == keys.CTRL_K:
+                        self.submode = 'digraph_pending'
                         return
 
                 if key == keys.ESC:
@@ -316,7 +320,7 @@ class VimEditor:
                         self.bring_position_into_text()
                 if key == 'c':
                         self.text = self.text[:self.start] + self.text[self.end+1:]
-                        self.mode = 'insert'
+                        self.mode = 'insert' ; self.submode = 'none'
                 if key == 'y':
                         self.yank_history.append(self.text[self.start:self.end+1])
                 if key == '~':
@@ -326,9 +330,9 @@ class VimEditor:
                 self.prev_operator = key
 
         def w_motion(self):
-                if self.mode == 'normal':
+                if self.submode == 'normal':
                         return self.idx(self.BOW)
-                elif self.mode == 'motion_pending':
+                elif self.submode == 'motion_pending':
                         if self.operator in 'c~y':
                                 return self.idx(self.EOW)
                         elif self.operator == 'd':
@@ -373,7 +377,7 @@ class VimEditor:
                 if k == 'C':
                         self.process_keys('c$')
                 if k in ('s','S'):
-                        self.mode = 'insert'
+                        self.mode = 'insert'; self.submode = 'none'
                         if key == 'S':
                                 self.text = ''
                         if key == 's':
@@ -414,7 +418,7 @@ class VimEditor:
                         self.pos += len(self.yank)
                 # enter insert mode
                 if k in ('i','I','a','A'):
-                        self.submode = 'insert'
+                        self.mode = 'insert' ; self.submode = 'none'
                         self.pos =  {'i': self.pos,
                                 'I': 0,
                                 'a': self.pos + 1,
@@ -471,11 +475,24 @@ class VimEditor:
                 cursor = '|' if self.mode == 'insert' else '['
                 text_with_cursor = self.text[:self.pos] + cursor + self.text[self.pos:]
                 return text_with_cursor
-                
+
+        @property
+        def screen_lines(self):
+                # the prompt has some ANSI Control Codes
+                # so use a dummy prompt of the same length
+                text = '_' * self.prompt_length + self.text
+                screen_lines = 0
+                for line in text.splitlines():
+                        if not line:
+                                screen_lines += 1
+                                continue
+                        screen_lines += ceil( len(line) / terminal.COLUMNS )
+                if text.endswith('\n'):
+                        screen_lines += 1
+                return screen_lines
 
         def scrollback(self):
-                l = terminal.count_screen_lines(str(self))
-                ansi.up_line(l)
+                ansi.up_line(self.screen_lines)
                 ansi.clear_to_end()
 
         def run(self):

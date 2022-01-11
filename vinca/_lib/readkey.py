@@ -8,8 +8,9 @@ import contextlib
 import os
 from types import SimpleNamespace
 
-keys = SimpleNamespace(ESC = '\x1b', UP = '\x1b[A', DOWN = '\x1b[B', RIGHT = '\x1b[C',
-                        LEFT = '\x1b[D', BACK = '\x7f', CTRL_R = '\x12')
+keys = SimpleNamespace( UP = '\x1b[A', DOWN = '\x1b[B', RIGHT = '\x1b[C', LEFT = '\x1b[D',
+                        CTRL_UP = '\x1b[1;5A', CTRL_DOWN = '\x1b[1;5B', CTRL_RIGHT = '\x1b[1;5C', CTRL_LEFT = '\x1b[1;5D',
+                        ESC = '\x1b', BACK = '\x7f', CTRL_R = '\x12', CTRL_K = '\x0b')
 
 @contextlib.contextmanager
 def raw_terminal():
@@ -32,4 +33,4 @@ def raw_terminal():
 def readkey():
         with raw_terminal() as fd:
                 # a single key can be represented by up to 4 bytes
-                return os.read(fd, 4).decode()
+                return os.read(fd, 6).decode()
