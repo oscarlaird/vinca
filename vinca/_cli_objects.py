@@ -10,19 +10,19 @@ from vinca._tag_caching import tags_cache as _tags_cache
 
 # load the card generators into the module
 for _hotkey, _generator_func in _generators_dict.items():
-	globals()[_generator_func.__name__] = _generator_func
-	globals()[_hotkey] = _generator_func
+        globals()[_generator_func.__name__] = _generator_func
+        globals()[_hotkey] = _generator_func
 
 # create a collection (cardlist) out of all the cards
 col = collection = _Cardlist.from_directory(_config.cards_path)
 # import all the methods of the collection object directly into the module's namespace
 # this is so that ```vinca col filter``` can be written more shortly as ```vinca filter```
 for _method_name, _method in _inspect.getmembers(col):
-	if _method_name == '__getitem__':
-		continue
-	if _method_name.startswith('_'):
-		continue
-	globals()[_method_name] = _method
+        if _method_name == '__getitem__':
+                continue
+        if _method_name.startswith('_'):
+                continue
+        globals()[_method_name] = _method
 
 # create a few utility collections
 # by writing them as lambda functions they are only evaluated if I need them
@@ -44,7 +44,7 @@ help = '''\
 vinca --help              general help
 vinca filter --help       help on a specific subcommand
 man vinca                 vinca tutorial
-vinca online_help	  online man page'''
+vinca online_help         online man page'''
 online_help = 'https://oscarlaird.github.io/vinca-SRS/vinca.1.html'
 about = '''
                                ┌─────────────┐
@@ -85,11 +85,11 @@ set_cards_path = set_path = scp = _config.set_cards_path
 cards_path = path = cp = _config.cards_path
 
 class Advanced:
-	''' A set of rarely used advanced commands '''
-	def update_tags(self):
-		tags = collection.tags
-		_tags_cache.update(tags)
-		return tags
+        ''' A set of rarely used advanced commands '''
+        def update_tags(self):
+                tags = collection.tags
+                _tags_cache.update(tags)
+                return tags
 
 '''
 Add the following code to the ActionGroup object in helptext.py of fire to get proper aliasing

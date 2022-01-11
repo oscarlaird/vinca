@@ -3,14 +3,14 @@ TODAY = datetime.date.today()
 import importlib
 
 def edit(card):
-	start = datetime.datetime.now()
+        start = datetime.datetime.now()
 
-	m = importlib.import_module('.' + card.editor, package = 'vinca._editors')
-	m.edit(card)
+        m = importlib.import_module('.' + card.editor, package = 'vinca._editors')
+        m.edit(card)
 
-	stop = datetime.datetime.now()
-	elapsed_time = min(240, (stop - start).seconds)
+        stop = datetime.datetime.now()
+        elapsed_time = min(240, (stop - start).seconds)
 
-	card.history.append_entry(TODAY, elapsed_time, 'edit')
-	
-	card.make_string()
+        card.history.append_entry(TODAY, elapsed_time, 'edit')
+        
+        card.make_string()
