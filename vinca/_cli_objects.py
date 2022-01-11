@@ -32,9 +32,9 @@ deleted = lambda: col.filter(deleted= True)
 deleted.__doc__ = 'Your deleted cards'
 due = lambda: col.filter(due= True)
 due.__doc__ = 'Your due cards'
-recent = rs  = lambda: col.sort('seen-date')
+recent = rs  = lambda: col.sort('seen')
 recent.__doc__ = 'Your cards sorted with the most recently seen ones at the top.'
-recent_created = rc = lambda: col.sort('create-date')
+recent_created = rc = lambda: col.sort('created')
 recent_created.__doc__ = 'Your cards sorted with the most recently created ones at the top.'
 
 # utility functions

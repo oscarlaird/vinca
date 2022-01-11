@@ -135,4 +135,61 @@ lists:
 5 = 3 + 2
 frankly, 2 = 1 + 1
 idea of polunomial data retrieval: 4 pieces of information are split into 5 cards; I can forget any card and the other 4 can recover it. (This is the generalization of redundancy.)
+
+Two Ideas (one practical & one not):
+practical:
+my own fork of fire: "mire"
+`mire vinca` launches a background process running python that loads the vinca module
+this background process then reads from a fifo and parses these commands exactly as python-fire would
+subsequent invocations of `mire vinca filter new count total` etc. simply write to the fifo
+and the background process which has already loaded vinca simply reads the commands and processed them like python-fire would
+
+
+impractical:
+intelligence is not in fact but relation
+vinca is not for trivia, but hierarchy
+therefore extensively label the relations between cards.
+Not just tags, but atomic single and double bonds between pairs of cards
+superior & inferior cards. in short, a whole web
+Perhaps special cards would be 'relation cards' which ask about the connect of a pair of pieces of knowledge.
+An interactive traversal program would then allow me to move from card to card and navigate the web interactively.
+It would visualize concentric circles of knowledge.
+And when you have made 100,000 such cards, traversing this web would be very similar to traversing your own brain.
+(it would be useful for any writing too. cards could be rated for many things like their importance, or in this
+case for their literary potential.)
+wq
+
+Diagram Creation
+write a vim library (perhaps introducing a new mode inherited from normal)
+for the creation of diagrams.
+E.g. from visual block we could wrap the selected text in a unicode box drawing.
+We could draw straight or diagonal arrows.
+We could even draw crude circles of a specified radius centered on the present point.
+The best would be a separate program for point tracing a perimeter with the mouse
+- the prog. would generate some approximate curve (cubic splines here or something)
+- then it would make the nearest fit using a set of unicode characters
+Now I can draw a ascii map of the roman world and label it with arrows
+
+Homemade text compression (shorthand). (Perhaps I could develop five easy deterministic rules which I would test against a corpus.)
+e.g. a dot might represent the and the last initial of a term could be used to designate that term.
+
+If I keep the independent folder system, some indexing could be done by helper daemons which watch files and then reindex.
+Or I could use a function decorator to keep things simple.
+Or the card could notify the index when it writes to metadata.
 A good rule for deletion: is the card difficult to review.
+
+media function
+- open sxiv from the card reviewer
+- maintain focus on current terminal
+- close sxiv on card close
+- I need PID of sxiv.
+
+allow for undoing a delete within the browser by pressing d again.
+
+We want greater orthogonality:
+i.e. we let a given card use ANY reviewer, or editor
+e.g. the vim editor could open 'lines' if it is a verses card
+     but otherwise it can open the card's directory in netrw
+editors: two_lines, vim
+reviewers: terminal, sxiv
+schedulers need to be changed manually in metadata

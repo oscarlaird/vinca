@@ -131,20 +131,7 @@ class Cardlist:
 		   deleted=False, due=False, new=False,
 		   invert=False):
 		''' Filter the collection. Consult `vinca filter --help` for a full list of predicates.  '''
-		if not any((tag,
-		   created_after, created_before,
-		   seen_after, seen_before,
-		   due_after, due_before,
-		   editor, reviewer, scheduler,
-		   deleted, due, new)):
-			print('Examples:\n'
-			      'vinca filter --new                       New Cards\n'
-			      'vinca filter --editor verses             Poetry Cards\n'
-			      'vinca filter --created-after -7          Cards created in the last week.\n'
-			      '\n'
-			      'Consult `vinca filter --help` for a complete list of predicates')
-			exit()
-		
+
 		# cast dates to dates
 		created_after = casting.to_date(created_after)
 		created_before = casting.to_date(created_before)
@@ -153,6 +140,20 @@ class Cardlist:
 		due_after = casting.to_date(due_after)
 		due_before = casting.to_date(due_before)
 
+		# assert that at least one filter predicate has been specified
+		if not any((tag,
+		   created_after, created_before,
+		   seen_after, seen_before,
+		   due_after, due_before,
+		   editor, reviewer, scheduler,
+		   deleted, due, new)):
+			return ('Examples:\n'
+			        'vinca filter --new                       New Cards\n'
+			        'vinca filter --editor verses             Poetry Cards\n'
+			        'vinca filter --created-after -7          Cards created in the last week.\n'
+			        '\n'
+			        'Consult `vinca filter --help` for a complete list of predicates')
+		
 		if due: due_before = TODAY
 
 		f = lambda card: (((not tag or tag in card.tags) and
