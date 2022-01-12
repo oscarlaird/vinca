@@ -32,7 +32,7 @@ class Card:
                                 'H': self.edit_history,
                                 'M': self.edit_metadata,
                                 't': self.edit_tags,
-                                'd': self.delete,
+                                'd': self.toggle_delete,
                                 'p': self.preview,
                                 '+': self.postpone}
 
