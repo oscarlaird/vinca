@@ -2,7 +2,7 @@ import setuptools
 from pathlib import Path
 
 setuptools.setup(
-        version="140",
+        version="141",
         name="vinca",
         author="Oscar Laird", 
         autor_email = "olaird25@gmail.com",

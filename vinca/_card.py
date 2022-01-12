@@ -147,9 +147,15 @@ def {m}(self, new_val):
         def new_path(self):
                 return config.cards_path / ('card-' + random_id())
 
-        def delete(self):
+        def delete(self, toggle = True):
                 self.deleted = True
                 return 'Card has been deleted. Use `vinca last-card restore` to undo.'
+
+        def toggle_delete(self):
+                if self.deleted:
+                        self.restore()
+                elif not self.deleted:
+                        self.delete()
 
         def restore(self):
                 self.deleted = False
@@ -164,6 +170,11 @@ def {m}(self, new_val):
 
         def edit_tags(self):
                 self.tags = VimEditor(prompt = 'tags: ', text = ' '.join(self.tags), completions = tags_cache).run().split()
+
+        def tag(self, *tags):
+                ' Add tags to a card from the command line '
+                self.tags += tags
+                return f'card has been tagged with: {" ".join(tags)}'
 
         def postpone(self, n=1):
                 tomorrow = TODAY + DAY*n
