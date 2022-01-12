@@ -33,6 +33,7 @@ class Card:
                                 'M': self.edit_metadata,
                                 't': self.edit_tags,
                                 'd': self.toggle_delete,
+                                'v': self.vim_edit_directory,
                                 'p': self.preview,
                                 '+': self.postpone}
 
@@ -130,6 +131,13 @@ def {m}(self, new_val):
                 self.load_metadata()
                 self.make_string()
         edit_history = edit_metadata
+ 
+        # edit directory with netrw
+        # useful for any card type
+        def vim_edit_directory(self):
+                subprocess.run(['vim', self.path])
+                self.load_metadata()
+                self.make_string()
 
         def print_metadata(self):
                 if not self.metadata_is_loaded:
