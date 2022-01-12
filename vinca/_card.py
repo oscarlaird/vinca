@@ -4,7 +4,7 @@ import datetime
 TODAY = datetime.date.today()
 DAY = datetime.timedelta(days=1)
 from pathlib import Path
-from shutil import copytree
+from shutil import copyfile
 
 from vinca import _reviewers, _editors, _schedulers 
 from vinca._tag_caching import tags_cache
@@ -51,6 +51,14 @@ class Card:
                 self.save_metadata()
                 # easy access to the last created card
                 config.last_card_path = self.path
+
+        def add_file(source, as=None):
+            'copy the file at [source] into this card. give it a new name with --as=newname.'
+            source = Path(source)
+            dest_name = as or source.name
+            dest = self.path / dest_name
+            copyfile(source, dest)
+            return f'File {source} copied to {dest}'
 
 
         @property
