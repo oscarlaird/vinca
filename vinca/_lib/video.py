@@ -8,6 +8,7 @@ class ActiveWindow:
         def __init__(self):
                 # use xdotool to query basic info about the terminal's geometry
                 out = run(['xdotool','getactivewindow','getwindowgeometry'], capture_output=True)
+                # TODO warn user if they do not have xdotool installed
                 # parse output and calculate references
                 out = str(out.stdout, encoding='utf-8')
                 window_id, abs_pos, geometry = out.splitlines()
