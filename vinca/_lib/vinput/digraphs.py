@@ -1,49 +1,10 @@
 digraphs = {
-    "Nb":	"#",	#NUMBER SIGN
-    "DO":	"$",	#DOLLAR SIGN
-    "At":	"@",	#COMMERCIAL AT
     "<(":	"[",	#LEFT SQUARE BRACKET
     "//":	"\\",	#REVERSE SOLIDUS
     ")>":	"]",	#RIGHT SQUARE BRACKET
     "'>":	"^",	#CIRCUMFLEX ACCENT
     "'!":	"`",	#GRAVE ACCENT
-    "(!":	"{",	#LEFT CURLY BRACKET
-    "!!":	"|",	#VERTICAL LINE
-    "!)":	"}",	#RIGHT CURLY BRACKET
     "'?":	"~",	#TILDE
-    "DT":	"^?",	#DELETE (DEL)
-    "PA":	"~@",	#PADDING CHARACTER (PAD)
-    "HO":	"~A",	#HIGH OCTET PRESET (HOP)
-    "BH":	"~B",	#BREAK PERMITTED HERE (BPH)
-    "NH":	"~C",	#NO BREAK HERE (NBH)
-    "IN":	"~D",	#INDEX (IND)
-    "NL":	"~E",	#NEXT LINE (NEL)
-    "SA":	"~F",	#START OF SELECTED AREA (SSA)
-    "ES":	"~G",	#END OF SELECTED AREA (ESA)
-    "HS":	"~H",	#CHARACTER TABULATION SET (HTS)
-    "HJ":	"~I",	#CHARACTER TABULATION WITH JUSTIFICATION (HTJ)
-    "VS":	"~J",	#LINE TABULATION SET (VTS)
-    "PD":	"~K",	#PARTIAL LINE FORWARD (PLD)
-    "PU":	"~L",	#PARTIAL LINE BACKWARD (PLU)
-    "RI":	"~M",	#REVERSE LINE FEED (RI)
-    "S2":	"~N",	#SINGLE-SHIFT TWO (SS2)
-    "S3":	"~O",	#SINGLE-SHIFT THREE (SS3)
-    "DC":	"~P",	#DEVICE CONTROL STRING (DCS)
-    "P1":	"~Q",	#PRIVATE USE ONE (PU1)
-    "P2":	"~R",	#PRIVATE USE TWO (PU2)
-    "TS":	"~S",	#SET TRANSMIT STATE (STS)
-    "CC":	"~T",	#CANCEL CHARACTER (CCH)
-    "MW":	"~U",	#MESSAGE WAITING (MW)
-    "SG":	"~V",	#START OF GUARDED AREA (SPA)
-    "EG":	"~W",	#END OF GUARDED AREA (EPA)
-    "SS":	"~X",	#START OF STRING (SOS)
-    "GC":	"~Y",	#SINGLE GRAPHIC CHARACTER INTRODUCER (SGCI)
-    "SC":	"~Z",	#SINGLE CHARACTER INTRODUCER (SCI)
-    "CI":	"~[",	#CONTROL SEQUENCE INTRODUCER (CSI)
-    "ST":	"~\\",	#STRING TERMINATOR (ST)
-    "OC":	"~]",	#OPERATING SYSTEM COMMAND (OSC)
-    "PM":	"~^",	#PRIVACY MESSAGE (PM)
-    "AC":	"~_",	#APPLICATION PROGRAM COMMAND (APC)
     "NS":	"|",	#NO-BREAK SPACE
     "!I":	"¡",	#INVERTED EXCLAMATION MARK
     "Ct":	"¢",	#CENT SIGN
@@ -525,56 +486,6 @@ digraphs = {
     "R+":	"ר",	#HEBREW LETTER RESH
     "Sh":	"ש",	#HEBREW LETTER SHIN
     "T+":	"ת",	#HEBREW LETTER TAV
-    ",+":	"،",	#ARABIC COMMA
-    ";+":	"؛",	#ARABIC SEMICOLON
-    "?+":	"؟",	#ARABIC QUESTION MARK
-    "H'":	"ء",	#ARABIC LETTER HAMZA
-    "aM":	"آ",	#ARABIC LETTER ALEF WITH MADDA ABOVE
-    "aH":	"أ",	#ARABIC LETTER ALEF WITH HAMZA ABOVE
-    "wH":	"ؤ",	#ARABIC LETTER WAW WITH HAMZA ABOVE
-    "ah":	"إ",	#ARABIC LETTER ALEF WITH HAMZA BELOW
-    "yH":	"ئ",	#ARABIC LETTER YEH WITH HAMZA ABOVE
-    "a+":	"ا",	#ARABIC LETTER ALEF
-    "b+":	"ب",	#ARABIC LETTER BEH
-    "tm":	"ة",	#ARABIC LETTER TEH MARBUTA
-    "t+":	"ت",	#ARABIC LETTER TEH
-    "tk":	"ث",	#ARABIC LETTER THEH
-    "g+":	"ج",	#ARABIC LETTER JEEM
-    "hk":	"ح",	#ARABIC LETTER HAH
-    "x+":	"خ",	#ARABIC LETTER KHAH
-    "d+":	"د",	#ARABIC LETTER DAL
-    "dk":	"ذ",	#ARABIC LETTER THAL
-    "r+":	"ر",	#ARABIC LETTER REH
-    "z+":	"ز",	#ARABIC LETTER ZAIN
-    "s+":	"س",	#ARABIC LETTER SEEN
-    "sn":	"ش",	#ARABIC LETTER SHEEN
-    "c+":	"ص",	#ARABIC LETTER SAD
-    "dd":	"ض",	#ARABIC LETTER DAD
-    "tj":	"ط",	#ARABIC LETTER TAH
-    "zH":	"ظ",	#ARABIC LETTER ZAH
-    "e+":	"ع",	#ARABIC LETTER AIN
-    "i+":	"غ",	#ARABIC LETTER GHAIN
-    "++":	"ـ",	#ARABIC TATWEEL
-    "f+":	"ف",	#ARABIC LETTER FEH
-    "q+":	"ق",	#ARABIC LETTER QAF
-    "k+":	"ك",	#ARABIC LETTER KAF
-    "l+":	"ل",	#ARABIC LETTER LAM
-    "m+":	"م",	#ARABIC LETTER MEEM
-    "n+":	"ن",	#ARABIC LETTER NOON
-    "h+":	"ه",	#ARABIC LETTER HEH
-    "w+":	"و",	#ARABIC LETTER WAW
-    "j+":	"ى",	#ARABIC LETTER ALEF MAKSURA
-    "y+":	"ي",	#ARABIC LETTER YEH
-    "0a":	"۰",	#EXTENDED ARABIC-INDIC DIGIT ZERO
-    "1a":	"۱",	#EXTENDED ARABIC-INDIC DIGIT ONE
-    "2a":	"۲",	#EXTENDED ARABIC-INDIC DIGIT TWO
-    "3a":	"۳",	#EXTENDED ARABIC-INDIC DIGIT THREE
-    "4a":	"۴",	#EXTENDED ARABIC-INDIC DIGIT FOUR
-    "5a":	"۵",	#EXTENDED ARABIC-INDIC DIGIT FIVE
-    "6a":	"۶",	#EXTENDED ARABIC-INDIC DIGIT SIX
-    "7a":	"۷",	#EXTENDED ARABIC-INDIC DIGIT SEVEN
-    "8a":	"۸",	#EXTENDED ARABIC-INDIC DIGIT EIGHT
-    "9a":	"۹",	#EXTENDED ARABIC-INDIC DIGIT NINE
     "B.":	"Ḃ",	#LATIN CAPITAL LETTER B WITH DOT ABOVE
     "b.":	"ḃ",	#LATIN SMALL LETTER B WITH DOT ABOVE
     "B_":	"Ḇ",	#LATIN CAPITAL LETTER B WITH LINE BELOW
@@ -759,30 +670,6 @@ digraphs = {
     "38":	"⅜",	#VULGAR FRACTION THREE EIGHTHS
     "58":	"⅝",	#VULGAR FRACTION FIVE EIGHTHS
     "78":	"⅞",	#VULGAR FRACTION SEVEN EIGHTHS
-    "1R":	"Ⅰ",	#ROMAN NUMERAL ONE
-    "2R":	"Ⅱ",	#ROMAN NUMERAL TWO
-    "3R":	"Ⅲ",	#ROMAN NUMERAL THREE
-    "4R":	"Ⅳ",	#ROMAN NUMERAL FOUR
-    "5R":	"Ⅴ",	#ROMAN NUMERAL FIVE
-    "6R":	"Ⅵ",	#ROMAN NUMERAL SIX
-    "7R":	"Ⅶ",	#ROMAN NUMERAL SEVEN
-    "8R":	"Ⅷ",	#ROMAN NUMERAL EIGHT
-    "9R":	"Ⅸ",	#ROMAN NUMERAL NINE
-    "aR":	"Ⅹ",	#ROMAN NUMERAL TEN
-    "bR":	"Ⅺ",	#ROMAN NUMERAL ELEVEN
-    "cR":	"Ⅻ",	#ROMAN NUMERAL TWELVE
-    "1r":	"ⅰ",	#SMALL ROMAN NUMERAL ONE
-    "2r":	"ⅱ",	#SMALL ROMAN NUMERAL TWO
-    "3r":	"ⅲ",	#SMALL ROMAN NUMERAL THREE
-    "4r":	"ⅳ",	#SMALL ROMAN NUMERAL FOUR
-    "5r":	"ⅴ",	#SMALL ROMAN NUMERAL FIVE
-    "6r":	"ⅵ",	#SMALL ROMAN NUMERAL SIX
-    "7r":	"ⅶ",	#SMALL ROMAN NUMERAL SEVEN
-    "8r":	"ⅷ",	#SMALL ROMAN NUMERAL EIGHT
-    "9r":	"ⅸ",	#SMALL ROMAN NUMERAL NINE
-    "ar":	"ⅹ",	#SMALL ROMAN NUMERAL TEN
-    "br":	"ⅺ",	#SMALL ROMAN NUMERAL ELEVEN
-    "cr":	"ⅻ",	#SMALL ROMAN NUMERAL TWELVE
     "<-":	"←",	#LEFTWARDS ARROW
     "-!":	"↑",	#UPWARDS ARROW
     "->":	"→",	#RIGHTWARDS ARROW
@@ -862,23 +749,7 @@ digraphs = {
     "</":	"〈",	#LEFT-POINTING ANGLE BRACKET
     "/>":	"〉",	#RIGHT-POINTING ANGLE BRACKET
     "Vs":	"␣",	#OPEN BOX
-    "1h":	"⑀",	#OCR HOOK
-    "3h":	"⑁",	#OCR CHAIR
-    "2h":	"⑂",	#OCR FORK
-    "4h":	"⑃",	#OCR INVERTED FORK
-    "1j":	"⑆",	#OCR BRANCH BANK IDENTIFICATION
-    "2j":	"⑇",	#OCR AMOUNT OF CHECK
-    "3j":	"⑈",	#OCR DASH
     "4j":	"⑉",	#OCR CUSTOMER ACCOUNT NUMBER
-    "1.":	"⒈",	#DIGIT ONE FULL STOP
-    "2.":	"⒉",	#DIGIT TWO FULL STOP
-    "3.":	"⒊",	#DIGIT THREE FULL STOP
-    "4.":	"⒋",	#DIGIT FOUR FULL STOP
-    "5.":	"⒌",	#DIGIT FIVE FULL STOP
-    "6.":	"⒍",	#DIGIT SIX FULL STOP
-    "7.":	"⒎",	#DIGIT SEVEN FULL STOP
-    "8.":	"⒏",	#DIGIT EIGHT FULL STOP
-    "9.":	"⒐",	#DIGIT NINE FULL STOP
     "hh":	"─",	#BOX DRAWINGS LIGHT HORIZONTAL
     "HH":	"━",	#BOX DRAWINGS HEAVY HORIZONTAL
     "vv":	"│",	#BOX DRAWINGS LIGHT VERTICAL
@@ -929,56 +800,6 @@ digraphs = {
     "VH":	"╋",	#BOX DRAWINGS HEAVY VERTICAL AND HORIZONTAL
     "FD":	"╱",	#BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
     "BD":	"╲",	#BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
-    "TB":	"▀",	#UPPER HALF BLOCK
-    "LB":	"▄",	#LOWER HALF BLOCK
-    "FB":	"█",	#FULL BLOCK
-    "lB":	"▌",	#LEFT HALF BLOCK
-    "RB":	"▐",	#RIGHT HALF BLOCK
-    ".S":	"░",	#LIGHT SHADE
-    ":S":	"▒",	#MEDIUM SHADE
-    "?S":	"▓",	#DARK SHADE
-    "fS":	"■",	#BLACK SQUARE
-    "OS":	"□",	#WHITE SQUARE
-    "RO":	"▢",	#WHITE SQUARE WITH ROUNDED CORNERS
-    "Rr":	"▣",	#WHITE SQUARE CONTAINING BLACK SMALL SQUARE
-    "RF":	"▤",	#SQUARE WITH HORIZONTAL FILL
-    "RY":	"▥",	#SQUARE WITH VERTICAL FILL
-    "RH":	"▦",	#SQUARE WITH ORTHOGONAL CROSSHATCH FILL
-    "RZ":	"▧",	#SQUARE WITH UPPER LEFT TO LOWER RIGHT FILL
-    "RK":	"▨",	#SQUARE WITH UPPER RIGHT TO LOWER LEFT FILL
-    "RX":	"▩",	#SQUARE WITH DIAGONAL CROSSHATCH FILL
-    "sB":	"▪",	#BLACK SMALL SQUARE
-    "SR":	"▬",	#BLACK RECTANGLE
-    "Or":	"▭",	#WHITE RECTANGLE
-    "UT":	"▲",	#BLACK UP-POINTING TRIANGLE
-    "uT":	"△",	#WHITE UP-POINTING TRIANGLE
-    "PR":	"▶",	#BLACK RIGHT-POINTING TRIANGLE
-    "Tr":	"▷",	#WHITE RIGHT-POINTING TRIANGLE
-    "Dt":	"▼",	#BLACK DOWN-POINTING TRIANGLE
-    "dT":	"▽",	#WHITE DOWN-POINTING TRIANGLE
-    "PL":	"◀",	#BLACK LEFT-POINTING TRIANGLE
-    "Tl":	"◁",	#WHITE LEFT-POINTING TRIANGLE
-    "Db":	"◆",	#BLACK DIAMOND
-    "Dw":	"◇",	#WHITE DIAMOND
-    "LZ":	"◊",	#LOZENGE
-    "0m":	"○",	#WHITE CIRCLE
-    "0o":	"◎",	#BULLSEYE
-    "0M":	"●",	#BLACK CIRCLE
-    "0L":	"◐",	#CIRCLE WITH LEFT HALF BLACK
-    "0R":	"◑",	#CIRCLE WITH RIGHT HALF BLACK
-    "Sn":	"◘",	#INVERSE BULLET
-    "Ic":	"◙",	#INVERSE WHITE CIRCLE
-    "Fd":	"◢",	#BLACK LOWER RIGHT TRIANGLE
-    "Bd":	"◣",	#BLACK LOWER LEFT TRIANGLE
-    "*2":	"★",	#BLACK STAR
-    "*1":	"☆",	#WHITE STAR
-    "<H":	"☜",	#WHITE LEFT POINTING INDEX
-    ">H":	"☞",	#WHITE RIGHT POINTING INDEX
-    "0u":	"☺",	#WHITE SMILING FACE
-    "0U":	"☻",	#BLACK SMILING FACE
-    "SU":	"☼",	#WHITE SUN WITH RAYS
-    "Fm":	"♀",	#FEMALE SIGN
-    "Ml":	"♂",	#MALE SIGN
     "cS":	"♠",	#BLACK SPADE SUIT
     "cH":	"♡",	#WHITE HEART SUIT
     "cD":	"♢",	#WHITE DIAMOND SUIT
