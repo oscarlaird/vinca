@@ -52,10 +52,13 @@ class Card:
                 # easy access to the last created card
                 config.last_card_path = self.path
 
-        def add_file(source, as=None):
-            'copy the file at [source] into this card. give it a new name with --as=newname.'
+        def add_file(self, source, new_name=None):
+            'copy the file at [source] into this card. give it a new name with --new_name=newname.'
             source = Path(source)
-            dest_name = as or source.name
+            if not source.exists():
+                    print(f'file {source} does not exist!')
+                    return
+            dest_name = new_name or source.name
             dest = self.path / dest_name
             copyfile(source, dest)
             return f'File {source} copied to {dest}'
