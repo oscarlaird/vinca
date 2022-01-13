@@ -2,7 +2,7 @@ import setuptools
 from pathlib import Path
 
 setuptools.setup(
-        version="143",
+        version="149",
         name="vinca",
         author="Oscar Laird", 
         autor_email = "olaird25@gmail.com",
@@ -18,7 +18,8 @@ setuptools.setup(
         },
 
         data_files = [('man/man1', ['vinca/docs/vinca.1'])],
-        include_package_data = True,
+        # include_package_data = True,
+        package_data = {'':['docs/*.md']},
         install_requires = ['fire'],
         packages=setuptools.find_packages(),
         scripts=[
