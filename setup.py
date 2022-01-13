@@ -2,7 +2,7 @@ import setuptools
 from pathlib import Path
 
 setuptools.setup(
-        version="142",
+        version="143",
         name="vinca",
         author="Oscar Laird", 
         autor_email = "olaird25@gmail.com",
@@ -17,7 +17,7 @@ setuptools.setup(
                 "Man Page": "https://oscarlaird.github.io/vinca-SRS/vinca.1.html",
         },
 
-        data_files = [('man/man1', ['docs/vinca.1'])],
+        data_files = [('man/man1', ['vinca/docs/vinca.1'])],
         include_package_data = True,
         install_requires = ['fire'],
         packages=setuptools.find_packages(),

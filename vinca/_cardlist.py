@@ -130,7 +130,7 @@ class Cardlist:
                    editor=None, reviewer=None, scheduler=None,
                    deleted=False, due=False, new=False,
                    invert=False):
-                ''' Filter the collection. Consult `vinca filter --help` for a full list of predicates.  '''
+                ''' Filter the collection. Try `vinca filter` (without arguments) for usage examples. '''
 
                 # cast dates to dates
                 created_after = casting.to_date(created_after)
