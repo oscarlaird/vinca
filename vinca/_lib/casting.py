@@ -16,6 +16,8 @@ def to_path(arg):
         ...
         FileNotFoundError
         '''
+        if arg is None:
+                return None
         if type(arg) is Path:
                 return arg
         p = Path(arg)
@@ -35,6 +37,8 @@ def to_date(arg):
         ...
         ValueError: Dates must be YYYY-MM-DD
         '''
+        if arg is None:
+                return None
         if type(arg) is datetime.date:
                 return arg
         if type(arg) is str:

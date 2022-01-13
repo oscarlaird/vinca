@@ -147,12 +147,13 @@ class Cardlist:
                    due_after, due_before,
                    editor, reviewer, scheduler,
                    deleted, due, new)):
-                        return ('Examples:\n'
-                                'vinca filter --new                       New Cards\n'
-                                'vinca filter --editor verses             Poetry Cards\n'
-                                'vinca filter --created-after -7          Cards created in the last week.\n'
-                                '\n'
-                                'Consult `vinca filter --help` for a complete list of predicates')
+                        print('Examples:\n'
+                              'vinca filter --new                       New Cards\n'
+                              'vinca filter --editor verses             Poetry Cards\n'
+                              'vinca filter --created-after -7          Cards created in the last week.\n'
+                              '\n'
+                              'Consult `vinca filter --help` for a complete list of predicates')
+                        return
                 
                 if due: due_before = TODAY
 
