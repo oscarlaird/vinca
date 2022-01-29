@@ -19,7 +19,7 @@ setuptools.setup(
 
         data_files = [('man/man1', ['vinca/docs/vinca.1'])],
         # include_package_data = True,
-        package_data = {'':['docs/*.md']},
+        package_data = {'':['docs/*.txt', 'docs/*.md']},
         install_requires = ['fire'],
         packages=setuptools.find_packages(),
         scripts=[

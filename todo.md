@@ -1,16 +1,10 @@
 Leaches
 - is_leach is a function of the scheduler and the card history
 
-uninstall function removes from .config/vinca/config.json
-uninstall removes the vinca-module wherever it is installed
-it does not remove the cards folder, but it does leave a message
-
-h to review previous card, u to undo grade
 only add to history and reschedule the card if it was due !!
 2 types of memory in vinca: recall ability; known to exist
 Definition of waste: all learning of card order, phrasing, etc.
 undo grade
-allow fire to do slicing of iterables (a sliced cardlist would need to return a cardlist)
 A new scheduler: never (helpful for making notes)
 A new generator: note (just a text file, with the never scheduler and no reviewer because it is never reviewed; or less)
 Why make this part of vinca at all? I can search; sort by date; tag; associate
@@ -28,33 +22,13 @@ think about inheritance and making the editor and reviewer abstract classes
 principle: the questions should be unambiguous for someone who did not create them
 manually transfer cards from anki to vinca
 Another tagging idea: allow for hidden words in {} so that tags can be added at the end but left invisible.
-A PYTHON VIM SPREADSHEET APP:
-• s is a subclass of array
-• column headers are used to create a named,tuple of cols like s.cols.date
-• dynamic setting like s.cols.date = [i for i in range(100)]
-• an init script which cannot reference the spreadsheet
-• cells are the evaluated ltr ttb
-• values can be hardcoded with the $ key
-• good support for dates
-• cells can be arbitrary python objects
-• formula class contains python code like =sum(cell.column[:cell.row_num])
-a --show flag for the purge command
-a --show flag for the purge command
 card-creation-time statistics
 rethink what you want to see and look at usage stats for your commands
-*** cacheing strategy: use symlinks to the directories themselves
-this
-ends addition
-,p
+ cacheing strategy: use symlinks to the directories themselves
 set the card difficulty ( a way to warn that the answer is long )
 set the card timer with custom pace for each card in metadata or generated from history
 grade without seeing all lines on a verses card
 
-
-1,095,000 is 100 cards per day over 30 years. Suppose creation time is ~30s makes 50m.
-This is ~1000 reviews per day in the period. With ~4s review is 66m.
-(So two hours a day is the approximate cost of 1M cards)
-Could I show the distribution of these cards among the main categories (language, poetry, history, philosophy, life).
 
 No matter the approach: SQL, json, anything else, 1M cards is too many. Yes, I can use the default "soon" collection which makes use of symlinks, but this is less convenient when I want to find a reference card. It requires caching, which is some amount of code.
 My preferred way is to launch a single vinca instance.
@@ -106,16 +80,6 @@ cards / day:  	56		123		150
 time / day:
 total:
 total time:
--- Internals --
----------------
-- create virtual cards with history and due_date but nothing else
-- process the collection day by day
--
-- make a histogram based on creation-date
-- intervals are day, week, month, and year.
--
-- create a binary (pixel) representation
-- translate to quadrants
 
 red and blue should be used in displaying the card itself not just for the cardlist. (this is done by going into the string method of the card and checking if the output is a tty. If it is we wrap the thing in colors.)
 A regulate command which would operate on a cardlist and distribute the due dates more evenly with a +-2 day allowance. (Optimized for a minimum of rescheduling.)
@@ -134,7 +98,7 @@ set a locked hour for card creation and review e.g. 9a - 10a
 lists:
 5 = 3 + 2
 frankly, 2 = 1 + 1
-idea of polunomial data retrieval: 4 pieces of information are split into 5 cards; I can forget any card and the other 4 can recover it. (This is the generalization of redundancy.)
+idea of polynomial data retrieval: 4 pieces of information are split into 5 cards; I can forget any card and the other 4 can recover it. (This is the generalization of redundancy.)
 
 Two Ideas (one practical & one not):
 practical:
@@ -157,34 +121,16 @@ It would visualize concentric circles of knowledge.
 And when you have made 100,000 such cards, traversing this web would be very similar to traversing your own brain.
 (it would be useful for any writing too. cards could be rated for many things like their importance, or in this
 case for their literary potential.)
-wq
 
-Diagram Creation
-write a vim library (perhaps introducing a new mode inherited from normal)
-for the creation of diagrams.
-E.g. from visual block we could wrap the selected text in a unicode box drawing.
-We could draw straight or diagonal arrows.
-We could even draw crude circles of a specified radius centered on the present point.
-The best would be a separate program for point tracing a perimeter with the mouse
-- the prog. would generate some approximate curve (cubic splines here or something)
-- then it would make the nearest fit using a set of unicode characters
-Now I can draw a ascii map of the roman world and label it with arrows
 
 Homemade text compression (shorthand). (Perhaps I could develop five easy deterministic rules which I would test against a corpus.)
-e.g. a dot might represent the and the last initial of a term could be used to designate that term.
+e.g. a dot might represent the and the initial of a last term could be used to designate that term.
 
 If I keep the independent folder system, some indexing could be done by helper daemons which watch files and then reindex.
 Or I could use a function decorator to keep things simple.
 Or the card could notify the index when it writes to metadata.
 A good rule for deletion: is the card difficult to review.
 
-media function
-- open sxiv from the card reviewer
-- maintain focus on current terminal
-- close sxiv on card close
-- I need PID of sxiv.
-
-allow for undoing a delete within the browser by pressing d again.
 
 We want greater orthogonality:
 i.e. we let a given card use ANY reviewer, or editor
@@ -193,3 +139,37 @@ e.g. the vim editor could open 'lines' if it is a verses card
 editors: two_lines, vim
 reviewers: terminal, sxiv
 schedulers need to be changed manually in metadata
+Go back to oldstyle help screen:
+If I run -h or help I am shown a list of the
+commands and their descriptions in a simple table.
+
+I will record the exact time of review, not just the day.
+This will allow me to dispense with last_card caching
+- I can use most recent review time as a stopgap
+- Later "mire" will simply cache the last card as a global variable
+As for the cards-folder I have a few choices
+- vinca reads from a locals cards folder which is actually a symlink
+- that we can set.
+- or 2: vinca always reads from ~/cards.
+- The user can symlink that if they like.
+
+We need subscript letters.
+
+Perhaps it would be convenient to also have a 
+n available ref to the most recently created 
+card.
+
+Instead of a config (json) file we can do the following:
+- obviate need for a "last card"
+- Make other variables environment variables:
+-- VINCA_CARDS_PATH
+-- TERMINAL_BG (perhaps consistent with some other standard.)
+- This has the advantage of simplifying the source code
+- And allowing for easy extensibility w/o communication of the modules
+- It does not allow for setting environment variables however.
+
+The "vinput" module is somewhat fragile and can be improved by tests and perhaps by taking a more functional approach.
+I.e.
+every motion is a function and can be unit tested.
+every operator is a function which takes a motion as a parameter and can be unit tested.
+I use a dictionary to connect the key_characters to their associated function. (So d,c,~,y will all have special handling if they want to override the default behaviour of the motion.)
