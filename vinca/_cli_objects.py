@@ -23,14 +23,10 @@ for _method_name in _methods:
         globals()[_method_name] = getattr(collection, _method_name)
 
 # utility functions
-help = '''\
-vinca --help              general help
-vinca filter --help       help on a specific subcommand
-man vinca                 vinca tutorial
-online man page           online_help = 'https://oscarlaird.github.io/vinca-SRS/vinca.1.html'''
 # TODO create a vinca-tutor script that helps the user through a set of cards on spaced repetition
 about = (_Path(__file__).parent / 'docs/about.txt').read_text()
 tips = (_Path(__file__).parent / 'docs/tips.txt').read_text()
+help = (_Path(__file__).parent / 'docs/help.txt').read_text()
 
 # quick reference to the most recent card
 _lcp = _config.last_card_path

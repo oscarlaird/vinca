@@ -1,0 +1,4 @@
+vinca --help              general help
+vinca filter --help       help on a specific subcommand
+man vinca                 vinca tutorial
+online man page           online_help = 'https://oscarlaird.github.io/vinca-SRS/vinca.1.html'''
