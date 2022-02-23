@@ -60,6 +60,7 @@ def schedule(history):
                 return history.last_date + (history.last_interval * 3) + DAY
         # TODO: An idea for grouping cards of a similar subject i.e. made on the same day
         # Round to the nearest multiple of 100 days after card creation if this is within 10% of the interval
+        # It would then be useful to have a way of moving the create-date forward or backward easily (could be in an advanced card commands suite)
 
 if __name__ == '__main__':
         import doctest
