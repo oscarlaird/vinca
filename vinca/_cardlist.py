@@ -109,6 +109,12 @@ class Cardlist:
                         for card in deleted_cards:
                                 rmtree(card.path)
 
+        def postpone(self, n=1):
+                'Make cards due n days after today. (default 1)'
+                for card in self:
+                        card.postpone(n=n)
+                print(f'{len(self)} cards postponed.')
+
         def delete(self):
                 'delete cards'
                 for card in self:

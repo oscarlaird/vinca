@@ -2,6 +2,7 @@
 from vinca._lib.terminal import AlternateScreen
 from vinca._lib.readkey import readkey
 from vinca._lib.video import DisplayImage
+from vinca._lib import ansi
 
 def make_string(card):
         f = ' / '.join((card.path / 'front').read_text().splitlines())
@@ -17,6 +18,9 @@ def review(card):
         with AlternateScreen():
                 # front text
                 print(front_text.read_text())
+                ansi.light()
+                print('\n',' '.join(card.tags), sep='')
+                ansi.reset()
 
                 with DisplayImage(front_image):
 

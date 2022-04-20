@@ -35,7 +35,7 @@ Low goals
 - fire should accept slices and iterables (maybe unnecessary)
 - figure out a philosophy of tagging
 - record exact time of day, not just date, so as to preserve order
-
+- postpone should change relative to due-date or today (whichever is later)
 
 MIRE
 ----
@@ -49,6 +49,25 @@ When fire calls vinca it references this module instead of init-ing it all over.
 The hard part is that they live in different python instances.
 (This would provide an extension whereby I could act on the previous result by default and use col to get back to neutral. I could also write an interactive mode where the prefatory `vinca` is omitted.)
 (Whenever cards are created they are added to the cardlist. This is already sort of implemented in the browser.)
+
+1. init vinca module
+2. daemonize self
+3. await SIG_CONT (or read from fifo)
+4. read cli-args from fifo
+5. run fire.Fire() (which is a way of retrieving introspective data from cli args)
+        - Fire(component, command=sys.argv, name=sys.argv[0])
+6. return result to user (but do not terminate the python instance)
+7. detach from terminal
+8. GOTO (3)
+
+Proposal
+- Write a separate master-vinca module (perhaps demote vinca to "vinca-core")
+- This will import fire and vinca-core (these will be separate PIP distros and dependencies)
+- In a for loop we will invoke fire.Fire(component = vinca-core, command = LOGIC, name = 'vinca')
+- Mire has to handle the above daemonization, attachment, dettachment from terminal etc.
+- It might catch errors from fire in a `try` block
+- This has the advantage that everything stays modular (and nothing is hacky)
+- best case I do not even need to modify fire
 
 
 Misc. Philosophy 

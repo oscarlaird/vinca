@@ -35,7 +35,8 @@ class Card:
                                 'd': self.toggle_delete,
                                 'v': self.vim_edit_directory,
                                 'p': self.preview,
-                                '+': self.postpone}
+                                '+': self.postpone,
+                                '-': self._prepone}
 
         def init_loaded_card(self, path):
                 self.path = path
@@ -196,9 +197,15 @@ def {m}(self, new_val):
                 return f'card has been tagged with: {" ".join(tags)}'
 
         def postpone(self, n=1):
+                'Make card due n days after today. (default 1)'
                 tomorrow = TODAY + DAY*n
                 self.due_date = tomorrow
-                return f'Postponed until {self.due_date}. (Use `vinca last-card postpone -1` to undo).'
+                return f'Postponed until {self.due_date}. (Use `vinca last-card postpone 0 to undo).'
+
+        def _prepone(self):
+                'Make card due one day sooner.'
+                self.due_date = self.due_date - DAY
+                return f'Due: {self.due_date}'
 
         @property
         def create_date(self):
