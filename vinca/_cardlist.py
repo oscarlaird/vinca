@@ -22,9 +22,23 @@ class Cardlist:
                 # this is so that we can repeatedly filter our results
                 self.database = Path(database) # I would probably want Python FIRE to automatically cast paths
                 self.conn = sqlite3.connect(database)
+                self.conn.row_factory = sqlite3.Row #return entries as dictionaries not tuples
                 self.cursor = self.conn.cursor()
                 # copy the cards table into temptable
                 self.cursor.execute('CREATE TEMPORARY TABLE temptable AS SELECT * FROM cards')
+
+        def update_card(self, card):
+                self.cursor.execute(f'SELECT * FROM cards WHERE id = {card.id}')
+                old_row = dict(self.cursor.fetchone())
+                new_row = card
+                assert old_row['id'] == new_row['id']
+                id = old_row['id']
+                for key, new_value in new_row.items():
+                    old_value = old_row[key]
+                    if old_value != new_value:
+                        self.cursor.execute(f'UPDATE cards SET {key} = {new_value} WHERE id = {id}')
+                conn.commit()
+
 
         def __len__(self):
                 self.cursor.execute('SELECT COUNT(*) FROM temptable')

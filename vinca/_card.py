@@ -10,102 +10,24 @@ from vinca import _reviewers, _editors
 from vinca._lib.vinput import VimEditor
 from vinca._lib.random_id import random_id
 
-class Card:
+class Card(dict):
         # Card class can load without 
         default_metadata = {'editor': 'base', 'reviewer':'base',
                             'tags': [], 'deleted': False,
                             'due_date': TODAY,}
 
-        def __init__(self, path=None, create=False):
-                # We must create a new card or load a new card from a path.
-                assert bool(path) ^ create
-                if path:
-                        self.init_loaded_card(path)
-                elif create:
-                        self.init_new_card()
-                # hotkeys are available from the browser
-                self._hotkeys = {'e': self.edit,
-                                'u': self.undo_history,
-                                'H': self.edit_history,
-                                'M': self.edit_metadata,
-                                't': self.edit_tags,
-                                'd': self.toggle_delete,
-                                'v': self.vim_edit_directory,
-                                'p': self.preview,
-                                '+': self.postpone,
-                                '-': self._prepone}
-
-        def init_loaded_card(self, path):
-                self.path = path
-                self.metadata_is_loaded = False
-
-        def init_new_card(self):
-                # create card location
-                self.path = self.new_path()
-                self.path.mkdir()
-                # initialize metadata
-                self.metadata = Card.default_metadata
-                self.metadata_is_loaded = True
-                self.save_metadata()
-                # easy access to the last created card
-                config.last_card_path = self.path
-
-        def add_file(self, source, new_name=None):
-            'copy the file at [source] into this card. give it a new name with --new_name=newname.'
-            source = Path(source)
-            if not source.exists():
-                    print(f'file {source} does not exist!')
-                    return
-            dest_name = new_name or source.name
-            dest = self.path / dest_name
-            copyfile(source, dest)
-            return f'File {source} copied to {dest}'
-
-
-        @property
-        def metadata_path(self):
-                return self.path / 'metadata.json'
-
-        def load_metadata(self):
-                self.metadata = json.load(self.metadata_path.open())
-                # dates must be serialized into strings for json
-                # I unpack them here
-                self.metadata['history'] = History.from_json_list(self.metadata['history'])
-                assert self.metadata['history'], f'empty history metadata for {self.path}'
-                self.metadata['due_date'] = datetime.date.fromisoformat(self.metadata['due_date'])
-                self.metadata_is_loaded = True
-
-        def save_metadata(self):
-                json.dump(self.metadata, self.metadata_path.open('w'), default=str, indent=2)
-
-        for m in default_metadata.keys():
-                # create getter and setter methods for everything in the metadata dictionary
-                exec(f'''
-@property
-def {m}(self):
-        if not self.metadata_is_loaded:
-                self.load_metadata()
-        return self.metadata["{m}"]''')
-                exec(f'''
-@{m}.setter
-def {m}(self, new_val):
-        if not self.metadata_is_loaded:
-                self.load_metadata()
-        self.metadata["{m}"] = new_val
-        self.save_metadata()''')        
-
-        # overwrite the tags setter with one modification
-        # we want to update the tags_cache
-        @tags.setter
-        def tags(self, tags):
-                if not self.metadata_is_loaded:
-                        self.load_metadata()
-                self.metadata['tags'] = tags
-                self.save_metadata()
-                tags_cache.add_tags(tags)
+        def __init__(self, row, update_callback):
+                assert type(row) is dict
+                self.update_callback = update_callback
+                super().__init__(self, row)
 
         def __str__(self):
-                return self.string
+                return self['fronttext'] + self['backtext']
+
+        def __setitem__(self, *args, **kwargs):
+                super().__setitem__(self, *args, **kwargs)
+                # commit change to card-dictionary to SQL database
+                self.update_callback()
 
         def review(self):
                 _reviewers.review(self)
@@ -118,46 +40,11 @@ def {m}(self, new_val):
                 # we have probably appended a history entry
                 self.undo_history()
 
-        def undo_history(self):
-                # Undo the most recent entry in the card's review history.
-                if len(self.history) == 1:
-                        print('Review history of this card is already at the beginning')
-                        return
-                self.history.pop()
-                self.save_metadata()
-                self.due_date = TODAY
-
-        def make_string(self):
-                self.string = _reviewers.make_string(self)
-
         def edit(self):
                 _editors.edit(self) 
                 self.make_string()
                 self.save_metadata() # we have probably modified history
 
-        def edit_metadata(self):
-                subprocess.run(['vim',self.path/'metadata.json'])
-                self.load_metadata()
-                self.make_string()
-        edit_history = edit_metadata
- 
-        # edit directory with netrw
-        # useful for any card type
-        def vim_edit_directory(self):
-                subprocess.run(['vim', self.path])
-                self.load_metadata()
-                self.make_string()
-
-        def print_metadata(self):
-                if not self.metadata_is_loaded:
-                        self.load_metadata()
-                for k,v in self.metadata.items():
-                        if k == 'history':
-                                continue
-                        print(f'{k:20}', v, sep='', end='\n')
-
-        def new_path(self):
-                return config.cards_path / ('card-' + random_id())
 
         def delete(self, toggle = True):
                 self.deleted = True
@@ -191,27 +78,5 @@ def {m}(self, new_val):
         def postpone(self, n=1):
                 'Make card due n days after today. (default 1)'
                 tomorrow = TODAY + DAY*n
-                self.due_date = tomorrow
+                self['due-date'] = tomorrow
                 return f'Postponed until {self.due_date}. (Use `vinca last-card postpone 0 to undo).'
-
-        def _prepone(self):
-                'Make card due one day sooner.'
-                self.due_date = self.due_date - DAY
-                return f'Due: {self.due_date}'
-
-        @property
-        def create_date(self):
-                return self.history.create_date
-
-        @property
-        def seen_date(self):
-                return self.history.last_date
-
-        @property
-        def new(self):
-                return self.history.new
-
-
-        @property
-        def time(self):
-                return self.history.time
