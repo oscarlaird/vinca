@@ -1,0 +1,4 @@
+SQL shouldn't be loaded into pandas and dumped; that defeats its purpose
+Queries in SQL need syntax highlighting
+A "Cardlist" object is an SQL table (possibly filtered)
+A "Card" is what it always was.

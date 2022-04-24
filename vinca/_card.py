@@ -6,18 +6,15 @@ DAY = datetime.timedelta(days=1)
 from pathlib import Path
 from shutil import copyfile
 
-from vinca import _reviewers, _editors, _schedulers 
-from vinca._tag_caching import tags_cache
-from vinca._config import config
+from vinca import _reviewers, _editors
 from vinca._lib.vinput import VimEditor
 from vinca._lib.random_id import random_id
-from vinca._history import History, HistoryEntry
 
 class Card:
         # Card class can load without 
-        default_metadata = {'editor': 'base', 'reviewer':'base', 'scheduler':'base',
-                            'tags': [], 'history': History([HistoryEntry(TODAY, 0, 'create')]), 'deleted': False,
-                            'due_date': TODAY, 'string': ''}
+        default_metadata = {'editor': 'base', 'reviewer':'base',
+                            'tags': [], 'deleted': False,
+                            'due_date': TODAY,}
 
         def __init__(self, path=None, create=False):
                 # We must create a new card or load a new card from a path.
@@ -158,11 +155,6 @@ def {m}(self, new_val):
                         if k == 'history':
                                 continue
                         print(f'{k:20}', v, sep='', end='\n')
-
-        def schedule(self):
-                dd = _schedulers.schedule(name=self.scheduler, history=self.history)
-                if dd:
-                        self.due_date = dd
 
         def new_path(self):
                 return config.cards_path / ('card-' + random_id())

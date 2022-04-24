@@ -9,57 +9,44 @@ from vinca._lib import ansi
 from vinca._lib.vinput import VimEditor
 from vinca._lib.readkey import readkey
 from vinca._lib import casting
-from vinca._config import config
-from vinca._tag_caching import tags_cache
 TODAY = datetime.date.today()
+
+import sqlite3
 
 class Cardlist:
 
-        @classmethod
-        def from_directory(cls, directory):
-                directory = Path(directory) # I would probably want Python FIRE to automatically cast paths
-                # the directory contains directories which represent cards
-                # I might want to manage my cards folder with git
-                # so I ignore .git
-                card_paths = (p for p in directory.iterdir() if p.name != '.git') 
-                return cls([Card(p) for p in card_paths])
-
-
-        def __init__(self, _cards):
-                # we do not subclass list so that
-                # the fire help is not littered
-                # with inherited methods (e.g. pop, extend, index)
-                # subclassing list would be more natural
-                # instead we subclass it manually below
-                self._cards = _cards
-
-        def __iter__(self):
-                return iter(self._cards)
+        def __init__(self, database):
+                # a cardlist is more or less an SQL table of cards
+                # we have to init it from a database
+                # we will always refer to the temporary table "temptable"
+                # this is so that we can repeatedly filter our results
+                self.database = Path(database) # I would probably want Python FIRE to automatically cast paths
+                self.conn = sqlite3.connect(database)
+                self.cursor = self.conn.cursor()
+                # copy the cards table into temptable
+                self.cursor.execute('CREATE TEMPORARY TABLE temptable AS SELECT * FROM cards')
 
         def __len__(self):
-                return len(self._cards)
-
-        def __getitem__(self, slice):
-                return self._cards[slice]
-
-        def _insert_card(self, idx, card):
-                self._cards.insert(idx, card)
+                self.cursor.execute('SELECT COUNT(*) FROM temptable')
+                return self.cursor.fetchone()[0]
 
         def __str__(self):
-                s = ''
                 l = len(self)
                 if l == 0:
                         return 'No cards.'
                 if l > 6:
-                        s += f'6 of {l}\n'
+                        s = f'6 of {l}\n'
+                self.cursor.execute('SELECT * FROM temptable LIMIT 6')
+                cards = self.cursor.fetchall()
                 s += ansi.codes['line_wrap_off']
-                for card in self[:6]:
-                        if card.due_as_of(TODAY):
-                                s += ansi.codes['blue']
-                        if card.deleted:
-                                s += ansi.codes['red']
-                        s += f'{card}\n'
-                        s += ansi.codes['reset']
+                for card in cards:
+                    card = Card.from_tuple(card)
+                    if card.due_as_of(TODAY):
+                            s += ansi.codes['blue']
+                    if card.deleted:
+                            s += ansi.codes['red']
+                    s += f'{card}\n'
+                    s += ansi.codes['reset']
                 s += ansi.codes['line_wrap_on']
                 return s
 
@@ -86,45 +73,29 @@ class Cardlist:
                         card.save_metadata()  # metadata ops should be internal TODO
 
         def tags(self):
+                raise NotImplementedError
                 return set([tag for card in self for tag in card.tags])
 
         def count(self):
                 ''' simple summary statistics '''
-                return {'total': len(self), 'due': len(self.filter(due=True))}
+                return {'total': len(self)}
 
-        def save(self, save_path):
-                ''' Save cards to a specified folder '''
-                save_path = casting.to_path(save_path)
-                for card in self:
-                        copytree(card.path, save_path / card.path.name)
-
-        def purge(self):
-                ''' Permanently delete cards marked for deletion. '''
-                deleted_cards = self.filter(deleted= True)
-                if not deleted_cards:
-                        print('No cards are marked for deletion.')
-                        return
-                print(f'delete {len(deleted_cards)} cards? (y/n)')
-                if readkey() == 'y':
-                        for card in deleted_cards:
-                                rmtree(card.path)
 
         def postpone(self, n=1):
                 'Make cards due n days after today. (default 1)'
+                raise NotImplementedError
                 for card in self:
                         card.postpone(n=n)
                 print(f'{len(self)} cards postponed.')
 
         def delete(self):
                 'delete cards'
-                for card in self:
-                        card.delete()
+                self.cursor.execute('UPDATE cards SET deleted = True FROM temptable WHERE cards.id = temptable.id')
                 print(f'{len(self)} cards deleted')
 
         def restore(self):
                 'restore (undelete) cards'
-                for card in self:
-                        card.restore()
+                self.cursor.execute('UPDATE cards SET deleted = False FROM temptable WHERE cards.id = temptable.id')
                 print(f'{len(self)} cards restored')
 
 
@@ -133,7 +104,7 @@ class Cardlist:
                    created_after=None, created_before=None,
                    seen_after=None, seen_before=None,
                    due_after=None, due_before=None,
-                   editor=None, reviewer=None, scheduler=None,
+                   editor=None, reviewer=None,
                    deleted=False, due=False, new=False,
                    invert=False):
                 ''' Filter the collection. Try `vinca filter` (without arguments) for usage examples. '''
@@ -151,7 +122,7 @@ class Cardlist:
                    created_after, created_before,
                    seen_after, seen_before,
                    due_after, due_before,
-                   editor, reviewer, scheduler,
+                   editor, reviewer,
                    deleted, due, new)):
                         print('Examples:\n'
                               'vinca filter --new                       New Cards\n'
@@ -160,6 +131,8 @@ class Cardlist:
                               '\n'
                               'Consult `vinca filter --help` for a complete list of predicates')
                         return
+
+
                 
                 if due: due_before = TODAY
 
@@ -172,7 +145,6 @@ class Cardlist:
                                 (not due_before or due_before >= card.due_date) and 
                                 (not editor or editor == card.editor) and
                                 (not reviewer or reviewer == card.reviewer) and
-                                (not scheduler or scheduler == card.scheduler) and
                                 (not deleted or card.deleted ) and
                                 (not new or card.new)) ^
                                 invert)
