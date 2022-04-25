@@ -1,10 +1,8 @@
+from vinca._lib.vinput import VimEditor
 from vinca._lib.terminal import AlternateScreen
 from vinca._lib.readkey import readkey
 from vinca._lib.video import DisplayImage
 from vinca._lib import ansi
-
-import subprocess
-import time
 
 GRADE_DICT = {'x': 'delete', 'd': 'delete',
               'q': 'exit', '\x1b': 'exit',
@@ -14,7 +12,7 @@ GRADE_DICT = {'x': 'delete', 'd': 'delete',
               '3': 'good', ' ': 'good', '\r': 'good', '\n': 'good',
               '4': 'easy'}
 
-
+import time
 from pathlib import Path
 from shutil import copyfile
 
@@ -152,19 +150,19 @@ def {f}(self, new_value):
         def review_basic(self):
                 with AlternateScreen():
                         print(self.front_text)
-                        ansi.light(); print('\n', card.tags); ansi.reset()
+                        ansi.light(); print('\n', self.tags); ansi.reset()
                         print('\n\n\n')
-                        with DisplayImage(card.front_image):
+                        with DisplayImage(self.front_image):
                             char = readkey() # press any key to flip the card
                             if char in ['x','a','q']: # immediate exit actions
                                     return char
-                        with DisplayImage(card.back_image):
-                            print(card.back_text)
+                        with DisplayImage(self.back_image):
+                            print(self.back_text)
                             return readkey()
 
-        def review_verses(card):
+        def review_verses(self):
                 with AlternateScreen():
-                        lines = card.front_text.splitlines()
+                        lines = self.front_text.splitlines()
                         print(lines.pop(0)) # print the first line
                         for line in lines:
                                 char = readkey() # press any key to continue
@@ -175,27 +173,19 @@ def {f}(self, new_value):
                         # grade the card
                         return = readkey()
 
+        def edit(self):
+                start = time.time()
+                self.edit_verses() if self.verses else self.edit_basic()
+                stop = time.time()
+                elapsed_seconds = int(stop - start)
+                self.edit_count += 1
+                self.editing_seconds += elapsed
 
 
+        def edit_basic(self):
+                self.front_text = VimEditor(text = self.front_text, prompt = 'Q: ').run()
+                self.back_text = VimEditor(text = self.back_text, prompt = 'A: ').run()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        def edit_verses(self):
+                self.front_text = VimEditor(text = self.front_text, prompt = 'Verses:\n').run()
 
