@@ -17,16 +17,20 @@ class Card(dict):
 
         # let us access key-val pairs as simple attributes
         for f in fields:
-                f'''
-                @property
-                def {f}:
-                        return self[f]
-                '''
+                exec(
+f'''
+@property
+def {f}(self):
+        return self["{f}"]
+@{f}.setter
+def {f}(self, new_value):
+        self["{f}"] = new_value
+'''
+)
 
         def __init__(self, id, database):
                 self.database = database
                 self.cursor =  database.cursor
-                self.id = id
                 super().__init__(id = id)
 
         def __str__(self):
