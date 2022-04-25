@@ -3,6 +3,7 @@
 from pathlib import Path as _Path
 from vinca._cardlist import Cardlist as _Cardlist
 from vinca._config import collection_path
+from vinca._database import Database as _Database
 # from vinca._generators import generators_dict as _generators_dict
 
 # load the card generators into the module
@@ -11,7 +12,8 @@ from vinca._config import collection_path
         # globals()[_hotkey] = _generator_func
 
 # create a collection (cardlist) out of all the cards
-col = collection = _Cardlist(collection_path)
+database = _Database(collection_path)
+col = collection = _Cardlist(database)
 
 # import some methods of the collection Cardlist object directly into the module's namespace
 # this is so that ```vinca col review``` can be written as ```vinca review```

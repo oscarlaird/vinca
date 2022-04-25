@@ -1,33 +1,52 @@
 import subprocess
-import json
-import datetime
-TODAY = datetime.date.today()
-DAY = datetime.timedelta(days=1)
+
 from pathlib import Path
 from shutil import copyfile
 
 from vinca import _reviewers, _editors
 from vinca._lib.vinput import VimEditor
-from vinca._lib.random_id import random_id
+from vinca._lib.julianday import julianday
+TODAY = julianday()
 
 class Card(dict):
-        # Card class can load without 
-        default_metadata = {'editor': 'base', 'reviewer':'base',
-                            'tags': [], 'deleted': False,
-                            'due_date': TODAY,}
+        ''' A card is a dictionary
+        its data is loaded from SQL on the fly and saved to SQL on the fly
+        Card class can load without '''
 
-        def __init__(self, row, update_callback):
-                assert type(row) is dict
-                self.update_callback = update_callback
-                super().__init__(self, row)
+        fields = ['id', 'fronttext', 'backtext', 'frontimage', 'backimage', 'frontaudio', 'backaudio', 'deleted', 'create_date', 'due_date', 'editing_seconds', 'reviewing_seconds', 'edit_count', 'review_count', 'stability', 'retrievability', 'tag']
+
+        # let us access key-val pairs as simple attributes
+        for f in fields:
+                f'''
+                @property
+                def {f}:
+                        return self[f]
+                '''
+
+        def __init__(self, id, database):
+                self.database = database
+                self.cursor =  database.cursor
+                self.id = id
+                super().__init__(id = id)
 
         def __str__(self):
-                return self['fronttext'] + self['backtext']
+                return self['fronttext'] + ' | ' + self['backtext']
 
-        def __setitem__(self, *args, **kwargs):
-                super().__setitem__(self, *args, **kwargs)
+        def __setitem__(self, key, value):
+                assert key != 'id', 'Card Id cannot be changed!'
+                super().__setitem__(key, value)
                 # commit change to card-dictionary to SQL database
-                self.update_callback()
+                self.cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?', (value, self.id))
+                self.database.conn.commit()
+
+        def __getitem__(self, key):
+                if key not in self.fields:
+                        raise KeyError(f'Field "{key}" does not exist')
+                if key not in self.keys():
+                        # load attribute from the database if we haven't yet
+                        self[key] = self.cursor.execute(f'SELECT {key} FROM cards \
+                                                          WHERE id = {self.id}').fetchone()[0]
+                return super().__getitem__(key)
 
         def review(self):
                 _reviewers.review(self)
@@ -61,7 +80,7 @@ class Card(dict):
                 return 'Card restored.'
 
         def due_as_of(self, date):
-                return self.due_date <= date
+                return self['due_date'] <= date
 
         @property
         def is_due(self):

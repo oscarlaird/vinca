@@ -1,5 +1,4 @@
 import re
-import datetime
 from random import random
 from shutil import copytree, rmtree
 from pathlib import Path
@@ -9,55 +8,65 @@ from vinca._lib import ansi
 from vinca._lib.vinput import VimEditor
 from vinca._lib.readkey import readkey
 from vinca._lib import casting
-TODAY = datetime.date.today()
+from vinca._lib.julianday import julianday
+TODAY = julianday()
 
 import sqlite3
 
 class Cardlist:
+        ''' A Cardlist is basically just an SQL query linked to a database
+        The filter, sort, findall, and slice methods build up this query
+        When used as an iterator it is just a list of cards (ids) 
+        It is responsible for knowing its database, usually ~/cards.db '''
 
         def __init__(self, database):
-                # a cardlist is more or less an SQL table of cards
-                # we have to init it from a database
-                # we will always refer to the temporary table "temptable"
-                # this is so that we can repeatedly filter our results
-                self.database = Path(database) # I would probably want Python FIRE to automatically cast paths
-                self.conn = sqlite3.connect(database)
-                self.conn.row_factory = sqlite3.Row #return entries as dictionaries not tuples
-                self.cursor = self.conn.cursor()
-                # copy the cards table into temptable
-                self.cursor.execute('CREATE TEMPORARY TABLE temptable AS SELECT * FROM cards')
+                self.filter_query = None
+                self.sort_query = None
+                self.findall_query = None
+                self.database = database
+                self.cursor = self.database.cursor
 
-        def update_card(self, card):
-                self.cursor.execute(f'SELECT * FROM cards WHERE id = {card.id}')
-                old_row = dict(self.cursor.fetchone())
-                new_row = card
-                assert old_row['id'] == new_row['id']
-                id = old_row['id']
-                for key, new_value in new_row.items():
-                    old_value = old_row[key]
-                    if old_value != new_value:
-                        self.cursor.execute(f'UPDATE cards SET {key} = {new_value} WHERE id = {id}')
-                conn.commit()
+        @property
+        def full_query(self):
+            pass
+
+        def explicit_cards_list(self):
+                self.cursor.execute(f'SELECT id FROM cards')
+                ids = [dict(row)['id'] for row in self.cursor.fetchall()]
+                return [Card(id, self.database) for id in ids]
+
+        def __iter__(self):
+                return self.explicit_cards_list().__iter__()
+
+        def __getitem__(self, slice):
+                if slice.start is None:
+                    # e.g. cardlist[3]
+                    idx = slice.stop
+                    assert idx
+                    assert idx <= len(self)
+                    self.cursor.execute(f'SELECT * FROM cards LIMIT {idx-1},{idx}')
+                    row = self.cursor.fetchone()
+                    return Card(row, update_callback = update_card)
+                elif slice.start and slice.stop and slice.step is None:
+                    raise NotImplementedError
 
 
         def __len__(self):
-                self.cursor.execute('SELECT COUNT(*) FROM temptable')
+                self.cursor.execute('SELECT COUNT(*) FROM cards')
                 return self.cursor.fetchone()[0]
 
         def __str__(self):
+                s = '' # we build up our string to return
                 l = len(self)
                 if l == 0:
                         return 'No cards.'
                 if l > 6:
-                        s = f'6 of {l}\n'
-                self.cursor.execute('SELECT * FROM temptable LIMIT 6')
-                cards = self.cursor.fetchall()
+                        s += f'6 of {l}\n'
                 s += ansi.codes['line_wrap_off']
-                for card in cards:
-                    card = Card.from_tuple(card)
+                for card in self.explicit_cards_list()[:6]:
                     if card.due_as_of(TODAY):
                             s += ansi.codes['blue']
-                    if card.deleted:
+                    if card['deleted']:
                             s += ansi.codes['red']
                     s += f'{card}\n'
                     s += ansi.codes['reset']
@@ -66,12 +75,12 @@ class Cardlist:
 
         def browse(self):
                 ''' Interactively manage you collection. See the tutorial (man vinca) for help. '''
-                Browser(self).browse()
+                Browser(self.explicit_cards_list()).browse()
 
         def review(self):
                 ''' Review your cards. '''
-                due_cards = self.filter(due = True)
-                Browser(due_cards).review()
+                self.filter(due = True)
+                Browser(self.explicit_cards_list()).review()
                                 
         def add_tag(self, tag):
                 ' Add a tag to cards '
@@ -203,5 +212,5 @@ class Cardlist:
 
         def time(self):
                 ''' Total time spend studying these cards. '''
-                return sum([card.history.time for card in self], start=datetime.timedelta(0))
+                raise NotImplementedError
 
