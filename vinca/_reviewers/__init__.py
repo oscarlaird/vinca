@@ -27,10 +27,3 @@ def review(card):
         grade = GRADE_DICT[key] if key in GRADE_DICT else 'exit'
 
         card.history.append_entry(TODAY, elapsed, grade)
-
-def make_string(card):
-        m = importlib.import_module('.'+card.reviewer, package = 'vinca._reviewers')
-        assert hasattr(m, 'make_string'), f'{card.reviewer} must implement \
-                the make_string method to represent this card on the command line'
-        return m.make_string(card)
-        

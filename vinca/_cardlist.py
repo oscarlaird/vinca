@@ -39,17 +39,7 @@ class Cardlist:
                 return self.explicit_cards_list().__iter__()
 
         def __getitem__(self, slice):
-                if slice.start is None:
-                    # e.g. cardlist[3]
-                    idx = slice.stop
-                    assert idx
-                    assert idx <= len(self)
-                    self.cursor.execute(f'SELECT * FROM cards LIMIT {idx-1},{idx}')
-                    row = self.cursor.fetchone()
-                    return Card(row, update_callback = update_card)
-                elif slice.start and slice.stop and slice.step is None:
-                    raise NotImplementedError
-
+                return self.explicit_cards_list().__getitem__(slice)
 
         def __len__(self):
                 self.cursor.execute('SELECT COUNT(*) FROM cards')

@@ -1,4 +1,19 @@
+from vinca._lib.terminal import AlternateScreen
+from vinca._lib.readkey import readkey
+from vinca._lib.video import DisplayImage
+from vinca._lib import ansi
+
 import subprocess
+import time
+
+GRADE_DICT = {'x': 'delete', 'd': 'delete',
+              'q': 'exit', '\x1b': 'exit',
+              'p': 'preview', '0': 'preview',
+              '1': 'again',
+              '2': 'hard',
+              '3': 'good', ' ': 'good', '\r': 'good', '\n': 'good',
+              '4': 'easy'}
+
 
 from pathlib import Path
 from shutil import copyfile
@@ -13,7 +28,7 @@ class Card(dict):
         its data is loaded from SQL on the fly and saved to SQL on the fly
         Card class can load without '''
 
-        fields = ['id', 'fronttext', 'backtext', 'frontimage', 'backimage', 'frontaudio', 'backaudio', 'deleted', 'create_date', 'due_date', 'editing_seconds', 'reviewing_seconds', 'edit_count', 'review_count', 'stability', 'retrievability', 'tag']
+        fields = ['id', 'front_text', 'back_text', 'front_image', 'back_image', 'front_audio', 'back_audio', 'verses', 'deleted', 'create_date', 'due_date', 'editing_seconds', 'reviewing_seconds', 'edit_count', 'review_count', 'stability', 'retrievability', 'tags']
 
         # let us access key-val pairs as simple attributes
         for f in fields:
@@ -32,9 +47,24 @@ def {f}(self, new_value):
                 self.database = database
                 self.cursor =  database.cursor
                 super().__init__(id = id)
+                self._hotkeys = {'e': self.edit,
+                                 't': self.edit_tags,
+                                 'd': self.toggle_delete,
+                                 'p': self.preview,
+                                 '+': self.postpone,}
 
         def __str__(self):
-                return self['fronttext'] + ' | ' + self['backtext']
+                return self['front_text'] + ' | ' + self['back_text']
+
+        def metadata(self):
+                self.load_all_fields()
+                return dict(self)
+
+        def load_all_fields(self):
+                # the card is normally lazy and only reads from the db if it needs to
+                # here we force it to read all of its data from the db
+                for f in self.fields:
+                        self[f]
 
         def __setitem__(self, key, value):
                 assert key != 'id', 'Card Id cannot be changed!'
@@ -84,7 +114,7 @@ def {f}(self, new_value):
                 return 'Card restored.'
 
         def due_as_of(self, date):
-                return self['due_date'] <= date
+                return self.due_date <= date
 
         @property
         def is_due(self):
@@ -103,3 +133,69 @@ def {f}(self, new_value):
                 tomorrow = TODAY + DAY*n
                 self['due-date'] = tomorrow
                 return f'Postponed until {self.due_date}. (Use `vinca last-card postpone 0 to undo).'
+
+
+        def review(self):
+                start = time.time()
+                grade_key = self.review_verses() if self.verses else self.review_basic()
+                grade = GRADE_DICT.get(grade_key, 'exit')
+                stop = time.time()
+
+                elapsed_seconds = int(stop - start)
+
+                self.review_count += 1
+                self.reviewing_seconds += elapsed
+
+                self.process_grade(grade, elapsed_seconds)
+
+
+        def review_basic(self):
+                with AlternateScreen():
+                        print(self.front_text)
+                        ansi.light(); print('\n', card.tags); ansi.reset()
+                        print('\n\n\n')
+                        with DisplayImage(card.front_image):
+                            char = readkey() # press any key to flip the card
+                            if char in ['x','a','q']: # immediate exit actions
+                                    return char
+                        with DisplayImage(card.back_image):
+                            print(card.back_text)
+                            return readkey()
+
+        def review_verses(card):
+                with AlternateScreen():
+                        lines = card.front_text.splitlines()
+                        print(lines.pop(0)) # print the first line
+                        for line in lines:
+                                char = readkey() # press any key to continue
+                                if char in ['x','a','q']: # immediate exit actions to abort the review
+                                        return char
+                                print(line)
+
+                        # grade the card
+                        return = readkey()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
