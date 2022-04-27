@@ -52,7 +52,7 @@ class VimEditor:
 
 
         def __init__(self, text='', mode='default', prompt = '', completions = None):
-                self.text = text
+                self.text = text if text is not None else ''
                 self.mode = mode
                 self.submode = 'none'
                 if mode=='default':

@@ -8,11 +8,13 @@ class Browser():
         quit_keys = ('q', keys.ESC)
         move_keys = ('j','k',keys.DOWN, keys.UP)
 
-        def __init__(self, cardlist):
-                self.cardlist = cardlist
+        def __init__(self, explicit_cardlist, make_basic_card, make_verses_card):
+                self.cardlist = explicit_cardlist
                 self.reviewing = False
                 self.sel = 0
                 self.frame = 0
+                self.make_basic_card = make_basic_card
+                self.make_verses_card = make_verses_card
 
         @property
         def N(self):
@@ -26,7 +28,6 @@ class Browser():
         def visible_lines(self):
                 return min(self.N, FRAME_WIDTH) + bool(self.status_bar)
 
-        
         @property
         def status_bar(self):
                 bar_text = ansi.codes['light'] + f'{self.sel + 1} of {self.N}.' + \
@@ -107,20 +108,17 @@ class Browser():
                 while True:
                         self.redraw_browser()
 
-                        # if we are in reviewing mode continue on to the next due card
                         if self.reviewing:
-                                # if the selected card is due, review it
-                                if self.selected_card.is_due:
-                                        self.selected_card.review()
-                                        if self.selected_card.last_action_grade == 'exit':
-                                                self.reviewing = False
-                                # move down to the next due_card
-                                while not self.selected_card.is_due:
-                                        # close the browser if we have reached the bottom
-                                        if self.sel == self.N - 1:
-                                                self.close_browser()
-                                        # move down to the next card
-                                        self.move_down()
+                                self.selected_card.review()
+                                if self.selected_card.last_action_grade == 'exit':
+                                        # exit reviewing mode
+                                        self.reviewing = False
+                                        continue
+                                # close the browser if we have reached the bottom
+                                if self.sel == self.N - 1:
+                                        self.close_browser()
+                                # move down to the next card
+                                self.move_down()
                                 continue # skip to the next cycle and do not read a key from the user
 
                         
@@ -142,10 +140,12 @@ class Browser():
                                 with AlternateScreen():
                                         command()
 
-                        # if generator := generators_dict.get(k):
-                                # with AlternateScreen():
-                                        # new_card = generator()
-                                        # self.cardlist._insert_card(self.sel, new_card)
-                                # ansi.down_line()
-                                # if self.N == FRAME_WIDTH + 1:
-                                        # ansi.down_line()
+                        if k in ('b','v'):
+                                with AlternateScreen():
+                                        new_card = self.make_basic_card() if k=='b' \
+                                            else self.make_verses_card if k=='v' else None
+                                        self.cardlist._insert_card(self.sel, new_card)
+                                ansi.down_line()
+                                # if this causes us to draw a status bar we need to go down an extra line
+                                if self.N == FRAME_WIDTH + 1:
+                                        ansi.down_line()

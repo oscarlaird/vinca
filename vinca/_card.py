@@ -25,8 +25,12 @@ class Card:
         # A card is a dictionary
         # its data is loaded from SQL on the fly and saved to SQL on the fly
 
-        _fields = ('id', 'front_text', 'back_text', 'front_image', 'back_image', 'front_audio', 'back_audio', 'verses', 'deleted', 'create_date', 'due_date',)
+        _bool_fields = ('deleted','verses')
         _date_fields = ('create_date','due_date')
+        _text_fields = ('front_text','back_text')
+        _BLOB_fields = ('front_image','back_image','front_audio','back_audio')
+        _media_fields = _text_fields + _BLOB_fields
+        _fields = ('id',) + _date_fields + _media_fields + _bool_fields
 
         # let us access key-val pairs from the dictionary as simple attributes
         for f in _fields:
@@ -58,7 +62,7 @@ def {f}(self, new_value):
                         s += ansi.codes['red']
                 elif self.is_due:
                         s += ansi.codes['blue']
-                s += self.front_text + ' | ' + self.back_text
+                s += self.front_text.replace('\n',' / ') + ' | ' + self.back_text.replace('\n',' / ')
                 s += ansi.codes['reset']
                 return s
 
@@ -66,14 +70,32 @@ def {f}(self, new_value):
                 return {field:getattr(self,field) for field in self._fields +
                         ('interval','ease','last_study_date','last_reset_date','tags')}
 
+        @staticmethod
+        def _is_path(arg):
+                ' Check if an argument specifies a file '
+                if not arg or type(arg) not in (str, Path):
+                        return
+                try:
+                        return Path(arg).exists()
+                except:
+                        return
+
         def __setitem__(self, key, value):
                 assert key != 'id', 'Card Id cannot be changed!'
                 assert key in self._fields
+                # if the supplied value is a filename we want
+                # to use the contents of the file, not the filename itself
+                if key in self._media_fields and self._is_path(value):
+                        if key in self._text_fields:
+                                value = Path(value).read_text()
+                        if key in self._BLOB_fields:
+                                value = Path(value).read_bytes()
                 self._dict[key] = value
                 # commit change to card-dictionary to SQL database
                 self._cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?', (value, self.id))
                 self._cursor.connection.commit()
-        set = __setitem__
+        set = __setitem__  # alias for easy cli usage
+        set.__doc__ = ' set the text or image for a card: `set front_image ../diagram.png` '
 
         def __getitem__(self, key):
                 if key not in self._fields:
@@ -82,6 +104,9 @@ def {f}(self, new_value):
                         # load attribute from the database if we haven't yet
                         value = self._cursor.execute(f'SELECT {key} FROM cards'
                             ' WHERE id = ?', (self.id,)).fetchone()[0]
+                        # preprocess certain values to cast them to better types:
+                        if key in ('front_text','back_text') and value is None:
+                                value = ''
                         self[key] = value
                 return self._dict[key]
 
@@ -266,16 +291,13 @@ def {f}(self, new_value):
                 return tags
 
         def tag(self, *tags):
-                ' Add tags to a card from the command line '
+                ' add tags to the card '
                 for tag in tags:
                         self._add_tag(tag)
 
-        def set_front_image(self, image_png):
-                image_path = Path(image_png)
-                assert image_path.exists(), f"The image path {image_png} does not exist!"
-                self.front_image = image_path.read_bytes()
-
-        def set_back_image(self, image_png):
-                image_path = Path(image_png)
-                assert image_path.exists(), f"The image path {image_png} does not exist!"
-                self.back_image = image_path.read_bytes()
+        @classmethod
+        def _new_card(cls, cursor):
+                cursor.execute("INSERT INTO cards DEFAULT VALUES")
+                cursor.connection.commit()
+                id = cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+                return cls(id, cursor)

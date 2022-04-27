@@ -21,7 +21,7 @@ class Cardlist:
                 # TODO TODO because Cardlists are so cheap,
                 # my functions should just return a modified copy, not self.
                 self._conditions = ['TRUE']
-                self._ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id)'
+                self._ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id) DESC'
                 self._cursor = cursor
 
         @property
@@ -66,12 +66,12 @@ class Cardlist:
 
         def browse(self):
                 ''' interactively manage you collection '''
-                Browser(self.explicit_cards_list()).browse()
+                Browser(self.explicit_cards_list(), self.make_basic_card, self.make_verses_card).browse()
 
         def review(self):
                 ''' review your cards '''
                 self.filter(due = True)
-                Browser(self.explicit_cards_list()).review()
+                Browser(self.explicit_cards_list(), self.make_basic_card, self.make_verses_card).review()
                                 
         def add_tag(self, tag):
                 ' add a tag to cards '
@@ -152,7 +152,7 @@ class Cardlist:
 
         def findall(self, pattern):
                 ''' return all cards containing a search pattern '''
-                self._conditions += [f"front_text LIKE '%{pattern}%' OR back_text LIKE '%{pattern}%'"]
+                self._conditions += [f"(front_text LIKE '%{pattern}%' OR back_text LIKE '%{pattern}%')"]
                 return self
 
         def sort(self, criterion=None, *, reverse=False):
@@ -181,3 +181,16 @@ class Cardlist:
                 self._cursor.execute(f'SELECT sum(seconds) FROM ({self._SELECT_IDS})'
                         ' LEFT JOIN reviews ON id=card_id')
                 return self._cursor.fetchone()[0]
+
+        def make_basic_card(self):
+                ' make a basic question and answer flashcard '
+                card = Card._new_card(self._cursor)
+                card.edit()
+                return card
+
+        def make_verses_card(self):
+                ' make a verses card: for recipes, poetry, oratory, instructions '
+                card = Card._new_card(self._cursor)
+                card.verses = True
+                card.edit()
+                return card
