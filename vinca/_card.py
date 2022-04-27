@@ -15,6 +15,15 @@ RESET_ACTION_GRADES = ('create', 'again')
 STUDY_ACTION_GRADES = ('hard', 'good', 'easy')
 BUREAU_ACTION_GRADES = ('edit', 'delete', 'exit', 'preview')
 
+help_string = ansi.codes['light'] + ('D                      delete    \n'
+                                     '1                      again     \n'
+                                     '2                      hard      \n'
+                                     '3 Enter Space          good      \n'
+                                     '4                      easy      \n'
+                                     'Q Escape               quit      \n') + ansi.codes['reset']
+
+
+
 import time
 from pathlib import Path
 
@@ -117,7 +126,7 @@ def {f}(self, new_value):
 
         def delete(self): 
                 self.deleted = True
-                return 'Card has been deleted. Use `vinca last-card restore` to undo.'
+                return 'card has been deleted; use `vinca 1 restore` to undo.'
 
         def _toggle_delete(self):
                 self.deleted = not self.deleted
@@ -161,6 +170,8 @@ def {f}(self, new_value):
                                     return char
                         with DisplayImage(data_bytes=self.back_image):
                             print(self.back_text)
+                            print('\n\n')
+                            print(help_string)
                             return readkey()
 
         def _review_verses(self):
@@ -174,6 +185,9 @@ def {f}(self, new_value):
                                 print(line)
 
                         # grade the card
+                        print('\n\n[END]')
+                        print('\n\n')
+                        print(help_string)
                         return readkey()
 
         def edit(self):
@@ -189,7 +203,7 @@ def {f}(self, new_value):
                 self.back_text = VimEditor(text = self.back_text, prompt = 'A: ').run()
 
         def _edit_verses(self):
-                self.front_text = VimEditor(text = self.front_text, prompt = 'Verses:\n').run()
+                self.front_text = VimEditor(text = self.front_text, prompt = 'Verses: ').run()
 
 
         def _log(self, action_grade, seconds):

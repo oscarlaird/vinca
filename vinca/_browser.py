@@ -144,8 +144,7 @@ class Browser():
                                 with AlternateScreen():
                                         new_card = self.make_basic_card() if k=='b' \
                                             else self.make_verses_card if k=='v' else None
-                                        self.cardlist._insert_card(self.sel, new_card)
-                                ansi.down_line()
+                                        self.cardlist.insert(self.sel, new_card)
                                 # if this causes us to draw a status bar we need to go down an extra line
                                 if self.N == FRAME_WIDTH + 1:
                                         ansi.down_line()
