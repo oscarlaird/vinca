@@ -114,8 +114,10 @@ def {f}(self, new_value):
                         value = self._cursor.execute(f'SELECT {key} FROM cards'
                             ' WHERE id = ?', (self.id,)).fetchone()[0]
                         # preprocess certain values to cast them to better types:
-                        if key in ('front_text','back_text') and value is None:
-                                value = ''
+                        if key in self._text_fields:
+                                # if SQL passes us an Integer or None
+                                # this is going to cause errors
+                                value = str(value)
                         self[key] = value
                 return self._dict[key]
 

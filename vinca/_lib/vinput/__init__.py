@@ -330,7 +330,8 @@ class VimEditor:
                 self.prev_operator = key
 
         def w_motion(self):
-                if self.submode == 'normal':
+                assert self.mode == 'normal'
+                if self.submode == 'none':
                         return self.idx(self.BOW)
                 elif self.submode == 'motion_pending':
                         if self.operator in 'c~y':
