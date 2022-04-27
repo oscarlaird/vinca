@@ -1,15 +1,11 @@
-import re
-from random import random
-from shutil import copytree, rmtree
 from pathlib import Path
 from vinca._card import Card
 from vinca._browser import Browser
 from vinca._lib import ansi
 from vinca._lib.vinput import VimEditor
 from vinca._lib.readkey import readkey
-from vinca._lib import casting
-from vinca._lib.julianday import julianday
-TODAY = julianday()
+from vinca._lib.julianday import today
+TODAY = today()
 
 import sqlite3
 
@@ -19,188 +15,169 @@ class Cardlist:
         When used as an iterator it is just a list of cards (ids) 
         It is responsible for knowing its database, usually ~/cards.db '''
 
-        def __init__(self, database):
-                self.filter_query = None
-                self.sort_query = None
-                self.findall_query = None
-                self.database = database
-                self.cursor = self.database.cursor
+        def __init__(self, cursor):
+                # TODO we should receive a cursor only
+                # (I can use cursor.connection...)
+                # TODO TODO because Cardlists are so cheap,
+                # my functions should just return a modified copy, not self.
+                self._conditions = ['TRUE']
+                self._ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id)'
+                self._cursor = cursor
 
         @property
-        def full_query(self):
-            pass
+        def _SELECT_IDS(self):
+                ' SQL Query of all card IDs. Check this first when debugging. '
+                return 'SELECT id FROM cards' + self._WHERE + self._ORDER_BY
 
-        def explicit_cards_list(self):
-                self.cursor.execute(f'SELECT id FROM cards')
-                ids = [dict(row)['id'] for row in self.cursor.fetchall()]
-                return [Card(id, self.database) for id in ids]
+        @property
+        def _WHERE(self):
+                return ' WHERE ' + ' AND '.join(self._conditions)
 
-        def __iter__(self):
-                return self.explicit_cards_list().__iter__()
+        def explicit_cards_list(self, LIMIT = 1000):
+                self._cursor.execute(self._SELECT_IDS + f' LIMIT {LIMIT}')
+                ids = [row[0] for row in self._cursor.fetchall()]
+                return [Card(id, self._cursor) for id in ids]
 
-        def __getitem__(self, slice):
-                return self.explicit_cards_list().__getitem__(slice)
+        def __getitem__(self, arg):
+                # access cards by their index
+                # we use human-oriented indexing beginning with 1...
+                if type(arg) is slice:
+                        idx = arg.stop 
+                elif type(arg) is int:
+                        idx = arg
+                else:
+                        raise ValueError
+                self._cursor.execute(self._SELECT_IDS + f' LIMIT 1 OFFSET {idx - 1}')
+                card_id = self._cursor.fetchone()[0]
+                return Card(card_id, self._cursor)
 
         def __len__(self):
-                self.cursor.execute('SELECT COUNT(*) FROM cards')
-                return self.cursor.fetchone()[0]
+                self._cursor.execute(f'SELECT COUNT(*) FROM ({self._SELECT_IDS})')
+                return self._cursor.fetchone()[0]
 
         def __str__(self):
-                s = '' # we build up our string to return
+                sample_cards = self.explicit_cards_list(LIMIT=6)
                 l = len(self)
-                if l == 0:
-                        return 'No cards.'
-                if l > 6:
-                        s += f'6 of {l}\n'
+                s = 'No cards.' if not l else f'6 of {l}\n' if l>6 else ''
                 s += ansi.codes['line_wrap_off']
-                for card in self.explicit_cards_list()[:6]:
-                    if card.due_as_of(TODAY):
-                            s += ansi.codes['blue']
-                    if card['deleted']:
-                            s += ansi.codes['red']
-                    s += f'{card}\n'
-                    s += ansi.codes['reset']
+                s += '\n'.join([str(card) for card in sample_cards])
                 s += ansi.codes['line_wrap_on']
                 return s
 
         def browse(self):
-                ''' Interactively manage you collection. See the tutorial (man vinca) for help. '''
+                ''' interactively manage you collection '''
                 Browser(self.explicit_cards_list()).browse()
 
         def review(self):
-                ''' Review your cards. '''
+                ''' review your cards '''
                 self.filter(due = True)
                 Browser(self.explicit_cards_list()).review()
                                 
         def add_tag(self, tag):
-                ' Add a tag to cards '
-                for card in self:
-                        card.tags += [tag]
+                ' add a tag to cards '
+                raise NotImplementedError
 
         def remove_tag(self, tag):
-                ' Remove a tag from cards '
-                for card in self:
-                        if tag in card.tags:
-                                card.tags.remove(tag)
-                        # TODO do this with set removal
-                        card.save_metadata()  # metadata ops should be internal TODO
+                ' remove a tag from cards '
+                raise NotImplementedError
 
         def tags(self):
-                raise NotImplementedError
-                return set([tag for card in self for tag in card.tags])
+                ' all tags in this cardlist '
+                self._cursor.execute(f'SELECT tag FROM tags JOIN '
+                    '({self._SELECT_IDS}) ON tags.card_id=id GROUP BY tag')
+                return [row[0] for row in self._cursor.fetchall()]
 
         def count(self):
                 ''' simple summary statistics '''
-                return {'total': len(self)}
-
+                total = len(self)
+                self.filter(due=True)
+                due = len(self)
+                self.filter(due=False, new=True)
+                new = len(self)
+                return {'total': total,
+                        'due': due,
+                        'new': new}
 
         def postpone(self, n=1):
-                'Make cards due n days after today. (default 1)'
+                'reschedule cards n days after today (default 1)'
                 raise NotImplementedError
-                for card in self:
-                        card.postpone(n=n)
-                print(f'{len(self)} cards postponed.')
-
-        def delete(self):
-                'delete cards'
-                self.cursor.execute('UPDATE cards SET deleted = True FROM temptable WHERE cards.id = temptable.id')
-                print(f'{len(self)} cards deleted')
-
-        def restore(self):
-                'restore (undelete) cards'
-                self.cursor.execute('UPDATE cards SET deleted = False FROM temptable WHERE cards.id = temptable.id')
-                print(f'{len(self)} cards restored')
-
 
         def filter(self, *,
                    tag = None,
-                   created_after=None, created_before=None,
-                   seen_after=None, seen_before=None,
-                   due_after=None, due_before=None,
-                   editor=None, reviewer=None,
-                   deleted=False, due=False, new=False,
+                   created_after=0, created_before=0,
+                   due_after=0, due_before=0,
+                   deleted=False, due=False, new=False, verses=False,
                    invert=False):
-                ''' Filter the collection. Try `vinca filter` (without arguments) for usage examples. '''
+                ''' filter the collection '''
 
-                # cast dates to dates
-                created_after = casting.to_date(created_after)
-                created_before = casting.to_date(created_before)
-                seen_after = casting.to_date(seen_after)
-                seen_before = casting.to_date(seen_before)
-                due_after = casting.to_date(due_after)
-                due_before = casting.to_date(due_before)
+                parameters_conditions = (
+                        # tag
+                        (tag, f"(SELECT true FROM tags WHERE card_id=cards.id"),
+                        # date conditions
+                        (created_after, f"create_date > {TODAY + created_after}"),
+                        (created_before, f"create_date < {TODAY + created_before}"),
+                        (due_after, f"due_date > {TODAY + due_after}"),
+                        (due_before, f"due_date < {TODAY + due_before}"),
+                        # boolean conditions
+                        (due, f"due_date < {TODAY}"),
+                        (deleted, f"deleted = 1"),
+                        (verses, f"verses = 1"),
+                        (new, f"due_date = create_date"),
+                )
 
                 # assert that at least one filter predicate has been specified
-                if not any((tag,
-                   created_after, created_before,
-                   seen_after, seen_before,
-                   due_after, due_before,
-                   editor, reviewer,
-                   deleted, due, new)):
+                parameters = [p for p,c in parameters_conditions]
+                if not any(parameters):
                         print('Examples:\n'
-                              'vinca filter --new                       New Cards\n'
-                              'vinca filter --editor verses             Poetry Cards\n'
-                              'vinca filter --created-after -7          Cards created in the last week.\n'
-                              '\n'
-                              'Consult `vinca filter --help` for a complete list of predicates')
+                            'filter --new                  new cards\n'
+                            'filter --editor verses        poetry cards\n'
+                            'filter --created-after -7     created in the last week\n'
+                            '\n'
+                            'Read `filter --help` for a complete list of predicates')
                         return
 
-
-                
-                if due: due_before = TODAY
-
-                f = lambda card: (((not tag or tag in card.tags) and
-                                (not created_after or created_after <= card.create_date) and
-                                (not created_before or created_before >= card.create_date) and 
-                                (not seen_after or seen_after <= card.seen_date) and
-                                (not seen_before or seen_before >= card.seen_date) and 
-                                (not due_after or due_after <= card.due_date) and
-                                (not due_before or due_before >= card.due_date) and 
-                                (not editor or editor == card.editor) and
-                                (not reviewer or reviewer == card.reviewer) and
-                                (not deleted or card.deleted ) and
-                                (not new or card.new)) ^
-                                invert)
-                
-                return self.__class__([c for c in self if f(c)])
+                for parameter, condition in parameters_conditions:
+                        if parameter:
+                                n = 'NOT ' if invert else ''
+                                self._conditions.append(n + condition)
+                return self
 
         def find(self, pattern):
                 ''' return the first card containing a search pattern '''
-                matches = self.findall(pattern)
-                matches.sort(criterion = 'seen')
-                return matches[0] if matches else 'no match found'
+                self.findall(pattern)
+                id = self._cursor.execute(self._SELECT_IDS + ' LIMIT 1').fetchone()[0]
+                return Card(id, self._cursor)
+
+
 
         def findall(self, pattern):
-                ''' return all cards containing a search-pattern '''
-                try:
-                        p = re.compile(f'({pattern})')  # wrap in parens to create regex group \1
-                except re.error:
-                        print(f'The pattern {p} is invalid regex')
-                        return
-                contains_pattern = lambda card: p.search(card.string)
-                return self.__class__([c for c in self if contains_pattern(c)])
-
-        def sort(self, criterion=None, *, reverse=False):
-                ''' sort the collection. criterion
-                should be (due | seen | created | time | random) '''
-                crit_dict = {
-                        'due': lambda card: card.due_date,
-                        'seen': lambda card: card.seen_date,
-                        'created': lambda card: card.create_date,
-                        'time': lambda card: card.time,
-                        'random': lambda card: random()} # random sort
-                # E.g. we want to see the cards that have taken the most time first
-                if criterion not in crit_dict:
-                        print('supply a sort criterion: (due | seen | created | time | random)')
-                        exit()
-                # For some criteria it is natural to see the highest value first
-                # switch reverse boolean flag iff it is a reverse crit
-                reverse ^= criterion in ('created', 'seen', 'time') 
-                sort_function = crit_dict[criterion]
-                self._cards.sort(key = sort_function, reverse = reverse)
+                ''' return all cards containing a search pattern '''
+                self._conditions += [f"front_text LIKE '%{pattern}%' OR back_text LIKE '%{pattern}%'"]
                 return self
 
-        def time(self):
-                ''' Total time spend studying these cards. '''
-                raise NotImplementedError
+        def sort(self, criterion=None, *, reverse=False):
+                ''' sort the collection: [due | seen | created | time | random] '''
+                # E.g. we want to see the cards that have taken the most time first
+                        
+                crit_dict = {'due': ' ORDER BY due_date',
+                             'created': ' ORDER BY create_date',
+                             'random': ' ORDER BY RANDOM()',
+                             'time': ' ORDER BY (select sum(seconds) from reviews where reviews.card_id=cards.id)',
+                             'seen': ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id)',
+                              }
+                if criterion not in crit_dict:
+                        print(f'supply a criterion: {" | ".join(crit_dict.keys())}')
+                        exit()
+                self._ORDER_BY = crit_dict[criterion]
+                # Sometimes it is natural to see the highest value first by default
+                reverse ^= criterion in ('created', 'seen', 'time') 
+                direction = ' DESC' if reverse else ' ASC'
+                self._ORDER_BY += direction
+                return self
+                
 
+        def time(self):
+                ''' total time spend studying these cards '''
+                self._cursor.execute(f'SELECT sum(seconds) FROM ({self._SELECT_IDS})'
+                        ' LEFT JOIN reviews ON id=card_id')
+                return self._cursor.fetchone()[0]

@@ -27,16 +27,4 @@
 ┃      •  ∂   θ   ∞   ∀   ∃   √   °   á   ö   ⇒   ↓                         ┃
 ┃      • There are many more!                                               ┃
 ┃                                                                           ┃
-┃  Backing up a collection of cards is easy!                                ┃
-┃  Method 1:                                                                ┃
-┃  • Create an empty backup directory to store your cards                   ┃
-┃  • `vinca collection save /path/to/backup/directory`                      ┃
-┃  Method 2:                                                                ┃
-┃  • Use git. (This is my preferred method.)                                ┃
-┃  • Make your cards directory a git repository.                            ┃
-┃  • Setup with github, bitbucket, &c.                                      ┃
-┃  • Navigate to your cards directory.                                      ┃
-┃  • `git push origin`                                                      ┃
-┃  • Now you can study from multiple machines without problem.              ┃
-┃                                                                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

@@ -1,5 +1,7 @@
 import sqlite3
-con = sqlite3.connect(":memory:")
+conn = sqlite3.connect(":memory:")
 
-def julianday():
-        return list(con.execute("select julianday('now')"))[0][0]
+def now():
+        return conn.execute("select julianday('now','localtime') + 0.5").fetchone()[0]
+def today():
+        return int(now())

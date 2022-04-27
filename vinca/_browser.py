@@ -1,7 +1,6 @@
 from vinca._lib import ansi
 from vinca._lib.terminal import LineWrapOff, AlternateScreen
 from vinca._lib.readkey import readkey, keys
-from vinca._generators import generators_dict
 
 FRAME_WIDTH = 6
 
@@ -30,7 +29,8 @@ class Browser():
         
         @property
         def status_bar(self):
-                bar_text = ansi.codes['light'] + f'{self.sel} of {self.N}\n' + ansi.codes['reset']
+                bar_text = ansi.codes['light'] + f'{self.sel + 1} of {self.N}.' + \
+                        '  ? for help\n' + ansi.codes['reset']
                 return bar_text if self.N > FRAME_WIDTH else ''
 
         def draw_browser(self):
@@ -80,6 +80,20 @@ class Browser():
                 # scroll up if we are off the screen
                 self.frame -= (self.frame - 1 == self.sel)  
 
+        def print_help(self):
+                self.clear_browser()
+                ansi.show_cursor()
+                print(''
+                    'J      move down               \n'
+                    'K      move up                 \n'
+                    'R      review                  \n'
+                    'E      edit                    \n'
+                    'T      edit tags               \n'
+                    '+      postpone                \n'
+                    'Q      quit                    \n'
+                    )
+                exit()
+
         def review(self):
                 self.reviewing = True
                 self.browse()
@@ -98,8 +112,7 @@ class Browser():
                                 # if the selected card is due, review it
                                 if self.selected_card.is_due:
                                         self.selected_card.review()
-                                        self.selected_card.schedule()
-                                        if self.selected_card.history.last_grade == 'exit':
+                                        if self.selected_card.last_action_grade == 'exit':
                                                 self.reviewing = False
                                 # move down to the next due_card
                                 while not self.selected_card.is_due:
@@ -113,8 +126,11 @@ class Browser():
                         
                         k = readkey()
 
-                        if k == 'r':
+                        if k == 'r' or k == '\n' or k == '\r':
                                 self.reviewing = True
+
+                        if k == '?':
+                                self.print_help()
 
                         if k in self.quit_keys:
                                 self.close_browser()
@@ -126,10 +142,10 @@ class Browser():
                                 with AlternateScreen():
                                         command()
 
-                        if generator := generators_dict.get(k):
-                                with AlternateScreen():
-                                        new_card = generator()
-                                        self.cardlist._insert_card(self.sel, new_card)
-                                ansi.down_line()
-                                if self.N == FRAME_WIDTH + 1:
-                                        ansi.down_line()
+                        # if generator := generators_dict.get(k):
+                                # with AlternateScreen():
+                                        # new_card = generator()
+                                        # self.cardlist._insert_card(self.sel, new_card)
+                                # ansi.down_line()
+                                # if self.N == FRAME_WIDTH + 1:
+                                        # ansi.down_line()

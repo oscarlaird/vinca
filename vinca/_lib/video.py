@@ -1,3 +1,4 @@
+from io import BytesIO
 import tkinter as Tk
 from subprocess import run
 from pathlib import Path
@@ -23,18 +24,24 @@ class ActiveWindow:
 
 class DisplayImage:
         '''A simple class to draw an image to the screen.
+        MUST BE PNG
         There are two methods: show and close.
         It can also be invoked as a context manager.'''
 
-        def __init__(self, image_path):
+        def __init__(self, *, image_path=None, data_bytes=None):
                 self.image_path = image_path
+                self.data_bytes = data_bytes
 
         def show(self):
         # get geometry information about the active terminal
                 aw = ActiveWindow()
 
                 self.root = Tk.Tk()
-                self.image = Tk.PhotoImage(file=self.image_path)
+
+                if self.image_path:
+                        self.image = Tk.PhotoImage(file=self.image_path)
+                elif self.data_bytes:
+                        self.image = Tk.PhotoImage(data=self.data_bytes)
                 # warning: images cannot be stored as local variables
                 # of a function or else there is risk of them being
                 # destroyed by premature garbage collection.
@@ -74,9 +81,9 @@ class DisplayImage:
                 self.root.destroy()
 
         def __enter__(self):
-                if self.image_path.exists():
+                if self.data_bytes or (self.image_path and self.image_path.exists()):
                         self.show()
 
         def __exit__(self, *exception_args):
-                if self.image_path.exists():
+                if self.data_bytes or (self.image_path and self.image_path.exists()):
                         self.close()
