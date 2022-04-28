@@ -15,14 +15,14 @@ class Cardlist:
         When used as an iterator it is just a list of cards (ids) 
         It is responsible for knowing its database, usually ~/cards.db '''
 
-        def __init__(self, cursor):
-                # TODO we should receive a cursor only
-                # (I can use cursor.connection...)
-                # TODO TODO because Cardlists are so cheap,
-                # my functions should just return a modified copy, not self.
-                self._conditions = ['TRUE']
-                self._ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id) DESC'
-                self._cursor = cursor
+        def __init__(self, cursor, conditions=['TRUE'],
+            ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id) DESC'):
+                self._cursor = cursor   
+                self._conditions = conditions
+                self._ORDER_BY = ORDER_BY
+
+        def _copy(self):
+                return self.__class__(self._cursor, self._conditions, self._ORDER_BY)
 
         @property
         def _SELECT_IDS(self):
@@ -66,12 +66,12 @@ class Cardlist:
 
         def browse(self):
                 ''' interactively manage you collection '''
-                Browser(self.explicit_cards_list(), self.make_basic_card, self.make_verses_card).browse()
+                Browser(self.explicit_cards_list(), self._make_basic_card, self._make_verses_card).browse()
 
         def review(self):
                 ''' review your cards '''
-                self.filter(due = True)
-                Browser(self.explicit_cards_list(), self.make_basic_card, self.make_verses_card).review()
+                due_cards = self.filter(due = True).explicit_card_list()
+                Browser(due_cards, self._make_basic_card, self._make_verses_card).review()
                                 
         def add_tag(self, tag):
                 ' add a tag to cards '
@@ -89,14 +89,9 @@ class Cardlist:
 
         def count(self):
                 ''' simple summary statistics '''
-                total = len(self)
-                self.filter(due=True)
-                due = len(self)
-                self.filter(due=False, new=True)
-                new = len(self)
-                return {'total': total,
-                        'due': due,
-                        'new': new}
+                return {'total':  len(self),
+                        'due':    len(self.filter(due=True)),
+                        'new':    len(self.filter(new=True))}
 
         def postpone(self, n=1):
                 'reschedule cards n days after today (default 1)'
@@ -126,21 +121,20 @@ class Cardlist:
                 )
 
                 # assert that at least one filter predicate has been specified
-                parameters = [p for p,c in parameters_conditions]
-                if not any(parameters):
+                if not any(parameters_conditions):
                         print('Examples:\n'
                             'filter --new                  new cards\n'
-                            'filter --editor verses        poetry cards\n'
                             'filter --created-after -7     created in the last week\n'
                             '\n'
                             'Read `filter --help` for a complete list of predicates')
                         return
 
+                new_cardlist = self._copy()
                 for parameter, condition in parameters_conditions:
                         if parameter:
                                 n = 'NOT ' if invert else ''
-                                self._conditions.append(n + condition)
-                return self
+                                new_cardlist._conditions.append(n + condition)
+                return new_cardlist
 
         def find(self, pattern):
                 ''' return the first card containing a search pattern '''
@@ -152,8 +146,10 @@ class Cardlist:
 
         def findall(self, pattern):
                 ''' return all cards containing a search pattern '''
-                self._conditions += [f"(front_text LIKE '%{pattern}%' OR back_text LIKE '%{pattern}%')"]
-                return self
+                new_cardlist = self._copy()
+                new_cardlist._conditions += [f"(front_text LIKE '%{pattern}%' \
+                        OR back_text LIKE '%{pattern}%')"]
+                return new_cardlist
 
         def sort(self, criterion=None, *, reverse=False):
                 ''' sort the collection: [due | seen | created | time | random] '''
@@ -168,12 +164,13 @@ class Cardlist:
                 if criterion not in crit_dict:
                         print(f'supply a criterion: {" | ".join(crit_dict.keys())}')
                         exit()
-                self._ORDER_BY = crit_dict[criterion]
+                new_cardlist = self._copy()
+                new_cardlist._ORDER_BY = crit_dict[criterion]
                 # Sometimes it is natural to see the highest value first by default
                 reverse ^= criterion in ('created', 'seen', 'time') 
                 direction = ' DESC' if reverse else ' ASC'
-                self._ORDER_BY += direction
-                return self
+                new_cardlist._ORDER_BY += direction
+                return new_cardlist
                 
 
         def time(self):
@@ -182,15 +179,35 @@ class Cardlist:
                         ' LEFT JOIN reviews ON id=card_id')
                 return self._cursor.fetchone()[0]
 
-        def make_basic_card(self):
+        def _make_basic_card(self):
                 ' make a basic question and answer flashcard '
                 card = Card._new_card(self._cursor)
                 card.edit()
                 return card
 
-        def make_verses_card(self):
+        def _make_verses_card(self):
                 ' make a verses card: for recipes, poetry, oratory, instructions '
                 card = Card._new_card(self._cursor)
                 card.verses = True
                 card.edit()
                 return card
+
+        def delete(self):
+                print(f'delete {len(self)} cards? y/n')
+                if readkey() != 'y':
+                        return 'aborted'
+                for card in self.explicit_cards_list():
+                        card.delete()
+
+        def purge(self):
+                ' permanently remove deleted cards '
+                deleted_cards = self.filter(deleted=True)
+                n = len(deleted_cards)
+                if n == 0:
+                        return 'no cards to delete'
+                print(f'purge {len(deleted_cards)} cards? y/n')
+                if readkey() != 'y':
+                        return 'aborted'
+                deleted_cards._cursor.execute("DELETE FROM cards" + deleted_cards._WHERE)
+                print(f'{deleted_cards._cursor.rowcount} cards deleted')
+                deleted_cards._cursor.connection.commit()

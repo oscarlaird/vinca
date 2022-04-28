@@ -27,8 +27,9 @@ help_string = ansi.codes['light'] + ('D                      delete    \n'
 import time
 from pathlib import Path
 
-from vinca._lib.julianday import today
-TODAY = today() # int representing day
+from vinca._lib import julianday
+
+TODAY = julianday.today() # int representing day
 
 class Card:
         # A card is a dictionary
@@ -76,7 +77,7 @@ def {f}(self, new_value):
                 return s
 
         def metadata(self):
-                return {field:getattr(self,field) for field in self._fields +
+                return {field:str(getattr(self,field)) for field in self._fields +
                         ('interval','ease','last_study_date','last_reset_date','tags')}
 
         @staticmethod
@@ -118,6 +119,8 @@ def {f}(self, new_value):
                                 # if SQL passes us an Integer or None
                                 # this is going to cause errors
                                 value = str(value)
+                        if key in self._date_fields:
+                                value = julianday.JulianDate(value)
                         self[key] = value
                 return self._dict[key]
 
@@ -226,7 +229,7 @@ def {f}(self, new_value):
                         RESET_ACTION_GRADES + (self.id,)).fetchone()[0]
                 if date is None:
                         return self.create_date
-                return JulianDay(date)
+                return julianday.JulianDate(date)
 
         @property
         def last_study_date(self):
@@ -235,7 +238,7 @@ def {f}(self, new_value):
                         RESET_ACTION_GRADES + STUDY_ACTION_GRADES + (self.id,)).fetchone()[0]
                 if date is None:
                         return self.create_date
-                return date
+                return julianday.JulianDate(date)
 
         @property
         def ease(self):

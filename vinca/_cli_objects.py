@@ -14,11 +14,11 @@ col = collection = _Cardlist(_cursor)
 
 # import some methods of the collection Cardlist object directly into the module's namespace
 # this is so that ```vinca col review``` can be written as ```vinca review```
-_methods = ('browse','count','filter','find','findall','review','sort','time')
+_methods = ('browse','count','filter','find','findall','review','sort','time','purge')
 for _method_name in _methods:
         globals()[_method_name] = getattr(collection, _method_name)
-basic = collection.make_basic_card
-verses = collection.make_verses_card
+basic = collection._make_basic_card
+verses = collection._make_verses_card
 
 globals()['1'] = lambda: collection[1]
 globals()['1'].__doc__ = "most recent card"
