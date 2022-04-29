@@ -15,6 +15,12 @@ for _method_name in _methods:
 basic = collection._make_basic_card
 verses = collection._make_verses_card
 
+globals()['1'] = lambda: collection[1]
+globals()['1'].__doc__ = "most recent card"
+globals()['2'] = lambda: collection[2]
+globals()['2'].__doc__ = "second most recent card"
+globals()['3'] = lambda: collection[3]
+globals()['3'].__doc__ = "third most recent card"
 
 def edit_config():
         from subprocess import run

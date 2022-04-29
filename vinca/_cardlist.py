@@ -20,7 +20,7 @@ class Cardlist(list):
         def __dir__(self):
                 members = super().__dir__()
                 hidden = ['extend','index','pop','mro','remove','append',
-                          'clear','insert','reverse']
+                          'clear','insert','reverse','copy']
                 return [m for m in members if m not in hidden]
 
         def _copy(self):
@@ -28,7 +28,7 @@ class Cardlist(list):
                 # we don't want to be affected by subsequent changes to conditions
                 return self.__class__(
                         self._cursor,
-                        [c for c in self._conditions],
+                        self._conditions.copy(),
                         self._ORDER_BY)
 
         @property
@@ -98,7 +98,7 @@ class Cardlist(list):
         def tags(self):
                 ' all tags in this cardlist '
                 self._cursor.execute(f'SELECT tag FROM tags JOIN '
-                    '({self._SELECT_IDS}) ON tags.card_id=id GROUP BY tag')
+                    f'({self._SELECT_IDS}) ON tags.card_id=id GROUP BY tag')
                 return [row[0] for row in self._cursor.fetchall()]
 
         def count(self):
