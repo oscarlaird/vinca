@@ -1,0 +1,4 @@
+poetry init
+poetry add fire
+poetry publish --build --username __token__ --password pypi-XXXXXXXXXXXX
+poetry version patch

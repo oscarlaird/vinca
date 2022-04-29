@@ -16,8 +16,7 @@ class Browser():
                 self.make_basic_card = make_basic_card
                 self.make_verses_card = make_verses_card
 
-        @property
-        def N(self):
+        def __len__(self):
                 return len(self.cardlist)
 
         @property
@@ -26,19 +25,20 @@ class Browser():
 
         @property
         def visible_lines(self):
-                return min(self.N, FRAME_WIDTH) + bool(self.status_bar)
+                return min(len(self), FRAME_WIDTH) + bool(self.status_bar)
 
         @property
         def status_bar(self):
-                bar_text = ansi.codes['light'] + f'{self.sel + 1} of {self.N}.' + \
+                bar_text = ansi.codes['light'] + f'{self.sel + 1} of {len(self)}.' + \
                         '  ? for help\n' + ansi.codes['reset']
-                return bar_text if self.N > FRAME_WIDTH else ''
+                return bar_text if len(self) > FRAME_WIDTH else ''
 
         def draw_browser(self):
                 ansi.hide_cursor()
                 with LineWrapOff():
                         print(self.status_bar, end='')
-                        for i, card in enumerate(self.cardlist[self.frame:self.frame+FRAME_WIDTH], start=self.frame):
+                        visible_cards = self.cardlist[self.frame:self.frame+FRAME_WIDTH]
+                        for i, card in enumerate(visible_cards, start=self.frame):
                                 if card.is_due:
                                         ansi.blue()
                                 if card.deleted:
@@ -68,7 +68,7 @@ class Browser():
                         self.move_up()
 
         def move_down(self):
-                if self.sel == self.N - 1:
+                if self.sel == len(self) - 1:
                         return # we are already at the bottom
                 self.sel += 1
                 # scroll down if we are off the screen
@@ -115,11 +115,11 @@ class Browser():
                                         self.reviewing = False
                                         continue
                                 # close the browser if we have reached the bottom
-                                if self.sel == self.N - 1:
+                                if self.sel == len(self) - 1:
                                         self.close_browser()
                                 # move down to the next card
                                 self.move_down()
-                                continue # skip to the next cycle and do not read a key from the user
+                                continue
 
                         
                         k = readkey()
@@ -145,6 +145,6 @@ class Browser():
                                         new_card = self.make_basic_card() if k=='b' \
                                             else self.make_verses_card() if k=='v' else None
                                         self.cardlist.insert(self.sel, new_card)
-                                # if this causes us to draw a status bar we need to go down an extra line
-                                if self.N == FRAME_WIDTH + 1:
+                                # if this makes us draw a status bar we go down an extra line
+                                if len(self) == FRAME_WIDTH + 1:
                                         ansi.down_line()

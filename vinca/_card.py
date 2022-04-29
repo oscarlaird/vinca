@@ -1,8 +1,13 @@
+import time
+from pathlib import Path
+
 from vinca._lib.vinput import VimEditor
 from vinca._lib.terminal import AlternateScreen
 from vinca._lib.readkey import readkey
 from vinca._lib.video import DisplayImage
 from vinca._lib import ansi
+from vinca._lib import julianday
+TODAY = julianday.today() # int representing day
 
 GRADE_DICT = {'x': 'delete', 'd': 'delete',
               'q': 'exit', '\x1b': 'exit',
@@ -15,21 +20,16 @@ RESET_ACTION_GRADES = ('create', 'again')
 STUDY_ACTION_GRADES = ('hard', 'good', 'easy')
 BUREAU_ACTION_GRADES = ('edit', 'delete', 'exit', 'preview')
 
-help_string = ansi.codes['light'] + ('D                      delete    \n'
-                                     '1                      again     \n'
-                                     '2                      hard      \n'
-                                     '3 Enter Space          good      \n'
-                                     '4                      easy      \n'
-                                     'Q Escape               quit      \n') + ansi.codes['reset']
+help_string = ansi.codes['light'] + \
+        ('D                      delete    \n'
+         'E                      edit      \n'
+         '1                      again     \n'
+         '2                      hard      \n'
+         '3 Enter Space          good      \n'
+         '4                      easy      \n'
+         'Q Escape               quit      \n') + \
+       ansi.codes['reset']
 
-
-
-import time
-from pathlib import Path
-
-from vinca._lib import julianday
-
-TODAY = julianday.today() # int representing day
 
 class Card:
         # A card is a dictionary
@@ -72,7 +72,9 @@ def {f}(self, new_value):
                         s += ansi.codes['red']
                 elif self.is_due:
                         s += ansi.codes['blue']
-                s += self.front_text.replace('\n',' / ') + ' | ' + self.back_text.replace('\n',' / ')
+                s += self.front_text.replace('\n',' / ')
+                s += ' | '
+                s += self.back_text.replace('\n',' / ')
                 s += ansi.codes['reset']
                 return s
 
@@ -102,10 +104,11 @@ def {f}(self, new_value):
                                 value = Path(value).read_bytes()
                 self._dict[key] = value
                 # commit change to card-dictionary to SQL database
-                self._cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?', (value, self.id))
+                self._cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?',
+                                      (value, self.id))
                 self._cursor.connection.commit()
         set = __setitem__  # alias for easy cli usage
-        set.__doc__ = ' set the text or image for a card: `set front_image ../diagram.png` '
+        set.__doc__ = 'set the text or image for a card: `set front_image ./diagram.png`'
 
         def __getitem__(self, key):
                 if key not in self._fields:
@@ -121,7 +124,7 @@ def {f}(self, new_value):
                                 value = str(value)
                         if key in self._date_fields:
                                 value = julianday.JulianDate(value)
-                        self[key] = value
+                        self._dict[key] = value
                 return self._dict[key]
 
         def __len__(self):
@@ -149,7 +152,7 @@ def {f}(self, new_value):
                 tomorrow = TODAY + n
                 hour = self.due_date % 1
                 self.due_date = tomorrow + hour
-                return f'Postponed until {self.due_date}. (Use `vinca last-card postpone 0 to undo).'
+                return f'Postponed until {self.due_date}.'
 
 
         def review(self):
@@ -161,31 +164,49 @@ def {f}(self, new_value):
                 elapsed_seconds = int(stop - start)
 
                 self._log(grade, elapsed_seconds)
+                if self.last_action_grade == 'delete':
+                        self.deleted = True
                 self._schedule()
 
 
         def _review_basic(self):
+                def edit_then_review():
+                        ansi.move_to_top(); ansi.clear_to_end()
+                        self.edit()
+                        return self._review_basic()
                 with AlternateScreen():
                         print(self.front_text)
-                        ansi.light(); print('\n', self.tags); ansi.reset()
+                        ansi.light(); print('\n',self.tags,sep=''); ansi.reset()
                         print('\n\n\n')
                         with DisplayImage(data_bytes=self.front_image):
                             char = readkey() # press any key to flip the card
-                            if char in ['x','a','q']: # immediate exit actions
+                            if char == 'e': # edit the card and then review it
+                                    return edit_then_review()
+                            if char in ['d','q']: # immediate exit actions
                                     return char
                         with DisplayImage(data_bytes=self.back_image):
                             print(self.back_text)
                             print('\n\n')
                             print(help_string)
-                            return readkey()
+                            grade = readkey()
+                            if grade == 'e':
+                                    return edit_then_review()
+                            return grade
 
         def _review_verses(self):
+                def edit_then_review():
+                        ansi.move_to_top(); ansi.clear_to_end()
+                        self.edit()
+                        return self._review_verses()
                 with AlternateScreen():
+                        ansi.light(); print(self.tags,'\n',sep=''); ansi.reset()
                         lines = self.front_text.splitlines()
-                        print(lines.pop(0)) # print the first line
+                        print(lines.pop(0))
                         for line in lines:
                                 char = readkey() # press any key to continue
-                                if char in ['x','a','q']: # immediate exit actions to abort the review
+                                if char == 'e':
+                                        return edit_then_review()
+                                if char in ['d','q']: # exit actions to abort the review
                                         return char
                                 print(line)
 
@@ -193,7 +214,10 @@ def {f}(self, new_value):
                         print('\n\n[END]')
                         print('\n\n')
                         print(help_string)
-                        return readkey()
+                        grade = readkey()
+                        if grade == 'e':
+                                return edit_then_review()
+                        return grade
 
         def edit(self):
                 start = time.time()
@@ -262,7 +286,7 @@ def {f}(self, new_value):
         def interval(self):
                 # The interval for the next review is calculated from two values:
                 # ✠ The Ease
-                # ✠ The number of days between the card's creation (or reset) and the most recent study review
+                # ✠ The number of days between creation (or reset) and the most recent study
                 #   This is called "study maturity"
                 study_maturity = int(self.last_study_date) - int(self.last_reset_date)
                 interval = int(self.ease * study_maturity)

@@ -1,13 +1,8 @@
-from pathlib import Path
 from vinca._card import Card
 from vinca._browser import Browser
 from vinca._lib import ansi
-from vinca._lib.vinput import VimEditor
 from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
-TODAY = today()
-
-import sqlite3
 
 class Cardlist:
         ''' A Cardlist is basically just an SQL query linked to a database
@@ -22,7 +17,12 @@ class Cardlist:
                 self._ORDER_BY = ORDER_BY
 
         def _copy(self):
-                return self.__class__(self._cursor, self._conditions, self._ORDER_BY)
+                # create a copy of the conditions list obejct (lists are mutable!)
+                # we don't want to be affected by subsequent changes to conditions
+                return self.__class__(
+                        self._cursor,
+                        [c for c in self._conditions],
+                        self._ORDER_BY)
 
         @property
         def _SELECT_IDS(self):
@@ -51,6 +51,13 @@ class Cardlist:
                 card_id = self._cursor.fetchone()[0]
                 return Card(card_id, self._cursor)
 
+        def __iter__(self):
+                # iterating is discouraged
+                # there is usually a better way to do what you want in sql
+                # but sometimes this is quick and convenient
+                return (self[i] for i in range(1, len(self) + 1))
+
+
         def __len__(self):
                 self._cursor.execute(f'SELECT COUNT(*) FROM ({self._SELECT_IDS})')
                 return self._cursor.fetchone()[0]
@@ -70,7 +77,7 @@ class Cardlist:
 
         def review(self):
                 ''' review your cards '''
-                due_cards = self.filter(due = True).explicit_card_list()
+                due_cards = self.filter(due = True).explicit_cards_list()
                 Browser(due_cards, self._make_basic_card, self._make_verses_card).review()
                                 
         def add_tag(self, tag):
@@ -105,6 +112,8 @@ class Cardlist:
                    invert=False):
                 ''' filter the collection '''
 
+                TODAY = today() # today's juliandate as an int e.g. 2457035
+
                 parameters_conditions = (
                         # tag
                         (tag, f"(SELECT true FROM tags WHERE card_id=cards.id"),
@@ -138,10 +147,10 @@ class Cardlist:
 
         def find(self, pattern):
                 ''' return the first card containing a search pattern '''
-                self.findall(pattern)
-                id = self._cursor.execute(self._SELECT_IDS + ' LIMIT 1').fetchone()[0]
-                return Card(id, self._cursor)
-
+                try:
+                        return self.findall(pattern).sort('seen')[1]
+                except:
+                        return f'no cards containing "{pattern}"'
 
 
         def findall(self, pattern):
