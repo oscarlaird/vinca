@@ -1,13 +1,12 @@
 '''Spaced Repetition CLI'''
 import sqlite3 as _sqlite3
 from vinca._cardlist import Cardlist as _Cardlist
-import vinca._config
+from vinca._config import collection_path, __file__
 
 # create a collection (cardlist) out of all the cards
-_cursor = _sqlite3.connect(vinca._config.collection_path).cursor()
+_cursor = _sqlite3.connect(collection_path).cursor()
 col = collection = _Cardlist(_cursor)
 
-del vinca
 # import some methods of the collection Cardlist object directly into the module's namespace
 # this is so that ```vinca col review``` can be written as ```vinca review```
 _methods = ('browse','count','filter','find','findall','review','sort','time','purge')
@@ -16,16 +15,10 @@ for _method_name in _methods:
 basic = collection._make_basic_card
 verses = collection._make_verses_card
 
-globals()['1'] = lambda: collection[1]
-globals()['1'].__doc__ = "most recent card"
-globals()['2'] = lambda: collection[2]
-globals()['2'].__doc__ = "second most recent card"
-globals()['3'] = lambda: collection[3]
-globals()['3'].__doc__ = "third most recent card"
 
 def edit_config():
         from subprocess import run
-        run(['vim', vinca._config.__file__])
+        run(['vim', __file__])
 
 '''
 Add the following code to the ActionGroup object in helptext.py of fire to get proper aliasing

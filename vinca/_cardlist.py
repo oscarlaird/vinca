@@ -4,7 +4,8 @@ from vinca._lib import ansi
 from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
 
-class Cardlist:
+class Cardlist(list):
+        ''
         ''' A Cardlist is basically just an SQL query linked to a database
         The filter, sort, findall, and slice methods build up this query
         When used as an iterator it is just a list of cards (ids) 
@@ -15,6 +16,12 @@ class Cardlist:
                 self._cursor = cursor   
                 self._conditions = conditions
                 self._ORDER_BY = ORDER_BY
+
+        def __dir__(self):
+                members = super().__dir__()
+                hidden = ['extend','index','pop','mro','remove','append',
+                          'clear','insert','reverse']
+                return [m for m in members if m not in hidden]
 
         def _copy(self):
                 # create a copy of the conditions list obejct (lists are mutable!)
@@ -186,7 +193,8 @@ class Cardlist:
                 ''' total time spend studying these cards '''
                 self._cursor.execute(f'SELECT sum(seconds) FROM ({self._SELECT_IDS})'
                         ' LEFT JOIN reviews ON id=card_id')
-                return self._cursor.fetchone()[0]
+                hours = self._cursor.fetchone()[0] // 3600
+                return f'{hours} hours'
 
         def _make_basic_card(self):
                 ' make a basic question and answer flashcard '
