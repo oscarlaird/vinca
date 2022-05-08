@@ -5,7 +5,7 @@ from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
 
 class Cardlist(list):
-        ''
+        '' 
         ''' A Cardlist is basically just an SQL query linked to a database
         The filter, sort, findall, and slice methods build up this query
         When used as an iterator it is just a list of cards (ids) 
@@ -17,6 +17,9 @@ class Cardlist(list):
                 self._conditions = conditions
                 self._ORDER_BY = ORDER_BY
 
+        # overwrite __dir__ so that we fool python FIRE
+        # we don't want methods inherited from list
+        # to show up in our help message
         def __dir__(self):
                 members = super().__dir__()
                 hidden = ['extend','index','pop','mro','remove','append',
@@ -33,7 +36,7 @@ class Cardlist(list):
 
         @property
         def _SELECT_IDS(self):
-                ' SQL Query of all card IDs. Check this first when debugging. '
+                'SQL Query of all card IDs. Check this first when debugging.'
                 return 'SELECT id FROM cards' + self._WHERE + self._ORDER_BY
 
         @property
@@ -79,30 +82,31 @@ class Cardlist(list):
                 return s
 
         def browse(self):
-                ''' interactively manage you collection '''
+                'interactively manage you collection'
                 Browser(self.explicit_cards_list(), self._make_basic_card, self._make_verses_card).browse()
 
         def review(self):
-                ''' review your cards '''
+                'review your cards'
                 due_cards = self.filter(due = True).explicit_cards_list()
                 Browser(due_cards, self._make_basic_card, self._make_verses_card).review()
-                                
-        def add_tag(self, tag):
-                ' add a tag to cards '
-                raise NotImplementedError
 
+        def tag(self, *tags):
+                'add tags to selected cards'
+                raise NotImplementedError
+                self._cursor.execute('INSERT INTO tags (card_id, tag) VALUES (card_id, ?)')
+                                
         def remove_tag(self, tag):
-                ' remove a tag from cards '
+                'remove a tag from cards '
                 raise NotImplementedError
 
         def tags(self):
-                ' all tags in this cardlist '
+                'all tags in this cardlist '
                 self._cursor.execute(f'SELECT tag FROM tags JOIN '
                     f'({self._SELECT_IDS}) ON tags.card_id=id GROUP BY tag')
                 return [row[0] for row in self._cursor.fetchall()]
 
         def count(self):
-                ''' simple summary statistics '''
+                'simple summary statistics'
                 return {'total':  len(self),
                         'due':    len(self.filter(due=True)),
                         'new':    len(self.filter(new=True))}
@@ -117,13 +121,13 @@ class Cardlist(list):
                    due_after=0, due_before=0,
                    deleted=False, due=False, new=False, verses=False,
                    invert=False):
-                ''' filter the collection '''
+                'filter the collection'
 
                 TODAY = today() # today's juliandate as an int e.g. 2457035
 
                 parameters_conditions = (
                         # tag
-                        (tag, f"(SELECT true FROM tags WHERE card_id=cards.id"),
+                        (tag, f"(SELECT true FROM tags WHERE card_id=cards.id)"),
                         # date conditions
                         (created_after, f"create_date > {TODAY + created_after}"),
                         (created_before, f"create_date < {TODAY + created_before}"),
@@ -193,8 +197,9 @@ class Cardlist(list):
                 ''' total time spend studying these cards '''
                 self._cursor.execute(f'SELECT sum(seconds) FROM ({self._SELECT_IDS})'
                         ' LEFT JOIN reviews ON id=card_id')
-                hours = self._cursor.fetchone()[0] // 3600
-                return f'{hours} hours'
+                minutes = self._cursor.fetchone()[0] // 60
+                hours, minutes = divmod(minutes, 60)
+                return f'{hours:0>2d}:{minutes:0>2d}'
 
         def _make_basic_card(self):
                 ' make a basic question and answer flashcard '

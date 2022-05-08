@@ -11,6 +11,17 @@ six = "*"
 termcolor = "*"
 
 [[package]]
+name = "prompt-toolkit"
+version = "3.0.29"
+description = "Library for building powerful interactive command lines in Python"
+category = "main"
+optional = false
+python-versions = ">=3.6.2"
+
+[package.dependencies]
+wcwidth = "*"
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -26,14 +37,26 @@ category = "main"
 optional = false
 python-versions = "*"
 
+[[package]]
+name = "wcwidth"
+version = "0.2.5"
+description = "Measures the displayed width of unicode strings in a terminal"
+category = "main"
+optional = false
+python-versions = "*"
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "96e10548bf3159647ffb2349b73bc1a877a969e2c25df917fe5b8d4923368538"
+content-hash = "cc9dbcb77551e76d0fab924f12395332c2dddc1db76d97deedada758ebbbe96a"
 
 [metadata.files]
 fire = [
     {file = "fire-0.4.0.tar.gz", hash = "sha256:c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62"},
+]
+prompt-toolkit = [
+    {file = "prompt_toolkit-3.0.29-py3-none-any.whl", hash = "sha256:62291dad495e665fca0bda814e342c69952086afb0f4094d0893d357e5c78752"},
+    {file = "prompt_toolkit-3.0.29.tar.gz", hash = "sha256:bd640f60e8cecd74f0dc249713d433ace2ddc62b65ee07f96d358e0b152b6ea7"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
@@ -41,4 +64,8 @@ six = [
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
+]
+wcwidth = [
+    {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
+    {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
 ]

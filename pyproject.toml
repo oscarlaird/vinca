@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vinca"
-version = "2.0.1"
+version = "2.1.0"
 description = "Spaced Repetition CLI"
 authors = ["Oscar Laird <olaird25@gmail.com>"]
 license = "MIT"
@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 fire = "^0.4.0"
+prompt-toolkit = "^3.0.29"
 
 [tool.poetry.scripts]
 vinca = "vinca:run"
@@ -18,3 +19,5 @@ vinca = "vinca:run"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.urls]
+"homepage" = "https://github.com/oscarlaird/vinca-SRS"

@@ -1,7 +1,9 @@
 import time
 from pathlib import Path
 
-from vinca._lib.vinput import VimEditor
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
 from vinca._lib.terminal import AlternateScreen
 from vinca._lib.readkey import readkey
 from vinca._lib.video import DisplayImage
@@ -121,7 +123,7 @@ def {f}(self, new_value):
                         if key in self._text_fields:
                                 # if SQL passes us an Integer or None
                                 # this is going to cause errors
-                                value = str(value)
+                                value = str(value or '')
                         if key in self._date_fields:
                                 value = julianday.JulianDate(value)
                         self._dict[key] = value
@@ -228,11 +230,21 @@ def {f}(self, new_value):
 
 
         def _edit_basic(self):
-                self.front_text = VimEditor(text = self.front_text, prompt = 'Q: ').run()
-                self.back_text = VimEditor(text = self.back_text, prompt = 'A: ').run()
+                print(type(self.front_text))
+                self.front_text = prompt('Question:     ',
+                        default=self.front_text,
+                        multiline=True, vi_mode=True,
+                        bottom_toolbar=lambda: 'press ESC-Enter to confirm')
+                self.back_text  = prompt('Answer:       ',
+                        default=self.back_text,
+                        multiline=True, vi_mode=True,
+                        bottom_toolbar=lambda: 'press ESC-Enter to confirm')
 
         def _edit_verses(self):
-                self.front_text = VimEditor(text = self.front_text, prompt = 'Verses: ').run()
+                self.front_text = prompt('Question:     ',
+                        default=self.front_text,
+                        multiline=True, vi_mode=True,
+                        bottom_toolbar=lambda: 'press ESC-Enter to confirm')
 
 
         def _log(self, action_grade, seconds):
@@ -321,8 +333,10 @@ def {f}(self, new_value):
                         self._cursor.connection.commit()
 
         def edit_tags(self):
-                new_tags = VimEditor(prompt = 'tags: ', text = ' '.join(self.tags),
-                        completions = self._collection_tags()).run().split()
+                new_tags = prompt('tags: ',
+                        default=' '.join(self.tags),
+                        completer=WordCompleter(self._collection_tags()),
+                        ).split()
                 for tag in self.tags:
                     self._remove_tag(tag)
                 for tag in new_tags:
