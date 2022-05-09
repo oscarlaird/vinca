@@ -1,4 +1,4 @@
-# vinca-SRS
+## Synopsis
 
 `VINCA` is a command-line spaced-repetition study tool.
 
