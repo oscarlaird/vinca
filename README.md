@@ -19,8 +19,8 @@
 
 ## Screenshots
 
+### `vinca stats`
 ![vinca stats](./utils/stats.png)
-*`vinca stats`*
 
+### basic commands
 ![basic screencast](./utils/screencast.gif?)
-*basic commands*
