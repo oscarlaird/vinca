@@ -1,3 +1,3 @@
 # Configuration for VINCA
 # currently there is only one variable! the fewer the better...
-collection_path = '/home/oscar/cards.db'
+collection_path = '~/cards.db'

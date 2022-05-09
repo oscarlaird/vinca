@@ -3,6 +3,7 @@ from vinca._browser import Browser
 from vinca._lib import ansi
 from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
+from vinca._statistics import Statistics
 
 from rich import print
 
@@ -253,3 +254,7 @@ class Cardlist(list):
                 deleted_cards._cursor.execute("DELETE FROM cards" + deleted_cards._WHERE)
                 print(f'{deleted_cards._cursor.rowcount} cards purged')
                 deleted_cards._cursor.connection.commit()
+
+        def stats(self, interval=7):
+                """ review statistics for the collection """
+                return Statistics(self._cursor, interval=interval).print()

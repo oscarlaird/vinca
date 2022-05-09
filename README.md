@@ -8,8 +8,8 @@
 
 ## Basic commands
 
-|command           |   description                            |
-|------------------|------------------------------------------|
+|command           |   description                            |  
+|------------------|------------------------------------------|  
 |--help            |   full screen help                       |  
 |basic             |   create question and answer cards       |  
 |review            |   study your cards                       |  
