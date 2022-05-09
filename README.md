@@ -16,3 +16,5 @@
 |browse            |   interactively manage your cards        |  
 |count             |   simple summary statistics              |  
 |tutorial review   |   study a tutorial deck of twenty cards  |  
+
+![vinca stats](./utils/stats.png)
