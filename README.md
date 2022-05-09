@@ -17,4 +17,10 @@
 |count             |   simple summary statistics              |  
 |tutorial review   |   study a tutorial deck of twenty cards  |  
 
+## Screenshots
+
 ![vinca stats](./utils/stats.png)
+*`vinca stats`*
+
+![test](./utils/file.gif)
+*test*
