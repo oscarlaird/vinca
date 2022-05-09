@@ -45,6 +45,7 @@ class Statistics:
 
     def counts_to_scores(self, counts):
             score_unit = max(counts) // self.height
+            score_unit = max(score_unit, 1)
             return [1 if 0 < count < score_unit else count // score_unit for count in counts]
 
     def scores_to_bitmap(self, scores):
@@ -61,18 +62,22 @@ class Statistics:
     def review_stats(self):
             self.cursor.execute('SELECT count(*) FROM reviews')
             total_reviews = self.cursor.fetchone()[0]
+            if total_reviews is None: total_reviews = 0
             self.cursor.execute('SELECT sum(seconds) FROM reviews')
             total_time = self.cursor.fetchone()[0]
+            if total_time is None: total_time = 0
             self.cursor.execute('SELECT min(date) FROM reviews')
             first_date = self.cursor.fetchone()[0]
+            if first_date is None: first_date = today() - 1
             total_days = today() - first_date
             reviews_per_day = total_reviews / total_days
-            time_per_review = total_time / total_reviews
+            time_per_review = total_time / total_reviews if total_reviews else 0
             time_per_day = total_time / total_days
             self.cursor.execute('SELECT count(*) FROM reviews WHERE date > ?',(today() - self.interval,))
             recent_reviews = self.cursor.fetchone()[0]
             self.cursor.execute('SELECT sum(seconds) FROM reviews WHERE date > ?',(today() - self.interval,))
             recent_time = self.cursor.fetchone()[0]
+            if recent_time is None: recent_time = 0
             return (f'{total_reviews} reviews '
                     f'{reviews_per_day:.1f} per day '
                     f'{recent_reviews} in the past {self.interval} days\n'
@@ -83,14 +88,17 @@ class Statistics:
     def create_stats(self):
             self.cursor.execute('SELECT count(*) FROM cards')
             total_cards = self.cursor.fetchone()[0]
+            if total_cards is None: total_cards = 0
             self.cursor.execute('SELECT min(create_date) FROM cards')
             first_date = self.cursor.fetchone()[0]
+            if first_date is None: first_date = today() - 1
             total_days = today() - first_date
             cards_per_day = total_cards / total_days
             self.cursor.execute('SELECT count(*) FROM cards WHERE create_date > ?',(today() - self.interval,))
             created_recent = self.cursor.fetchone()[0]
+            if created_recent is None: created_recent = 0
             return (f'{total_cards} cards created '
-                    f'{cards_per_day:.2f} per day '
+                    f'{cards_per_day:.1f} per day '
                     f'{created_recent} in the past {self.interval} days')
 
     def print(self):
