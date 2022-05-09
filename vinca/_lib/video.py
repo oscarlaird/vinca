@@ -1,7 +1,5 @@
-from io import BytesIO
 import tkinter as Tk
 from subprocess import run
-from pathlib import Path
 
 TERMINAL_BACKGROUND = '#000000'
 
@@ -23,10 +21,10 @@ class ActiveWindow:
                 self.center_y = self.top + self.height // 2
 
 class DisplayImage:
-        '''A simple class to draw an image to the screen.
+        """A simple class to draw an image to the screen.
         MUST BE PNG
         There are two methods: show and close.
-        It can also be invoked as a context manager.'''
+        It can also be invoked as a context manager."""
 
         def __init__(self, *, image_path=None, data_bytes=None):
                 self.image_path = image_path

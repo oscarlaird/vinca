@@ -51,11 +51,11 @@ class Bitmap(list):
 
         @classmethod
         def from_PBM(cls, file_name):
-                '''Read a Portable BitMap file; The format of a pbm file is
-                P4
-                141 141
-                lots of binary
-                '''
+            """Read a Portable BitMap file; The format of a pbm file is
+            P4
+            141 141
+            lots of binary
+            """
                 lines = Path(file_name).read_bytes().splitlines()
                 code, dimensions, content = lines
                 width, height = dimensions.split()
@@ -77,32 +77,32 @@ class Bitmap(list):
 
         @staticmethod
         def grouped_into_pairs(l):
-                '''
-                >>> Bitmap.grouped_into_pairs([1,2,3,4,5,6])
-                [(1, 2), (3, 4), (5, 6)]
-                '''
+            """
+            >>> Bitmap.grouped_into_pairs([1,2,3,4,5,6])
+            [(1, 2), (3, 4), (5, 6)]
+            """
                 return list(zip(l[::2], l[1::2]))
 
         @staticmethod
         def transposed(m):
-                '''
-                >>> Bitmap.transposed([[1,2], [3,4]])
-                [[1, 3], [2, 4]]
-                '''
+            """
+            >>> Bitmap.transposed([[1,2], [3,4]])
+            [[1, 3], [2, 4]]
+            """
                 return [list(col) for col in zip(*m)]
 
         def has_even_rows_and_cols(self):
-                '''
-                >>> Bitmap([[0,1,0,1],[1,1,0,1]]).has_even_rows_and_cols()
-                True
-                '''
+            """
+            >>> Bitmap([[0,1,0,1],[1,1,0,1]]).has_even_rows_and_cols()
+            True
+            """
                 return self.rows % 2 == 0 and self.cols % 2 == 0
 
         def group_quadrants(self):
-                '''
-                >>> Bitmap([[0,1,0,1],[1,1,0,1]]).group_quadrants()
-                [[((0, 1), (1, 1)), ((0, 1), (0, 1))]]
-                '''
+            """
+            >>> Bitmap([[0,1,0,1],[1,1,0,1]]).group_quadrants()
+            [[((0, 1), (1, 1)), ((0, 1), (0, 1))]]
+            """
                 assert self.has_even_rows_and_cols()
                 m = self
                 m = [self.grouped_into_pairs(row) for row in m]
@@ -112,7 +112,7 @@ class Bitmap(list):
                 return m
 
         def pad(self):
-                'pad array so that we have even number of rows and cols'
+            """pad array so that we have even number of rows and cols"""
                 if self.rows % 2: # odd number of rows
                         self.append([0]*self.cols)
                 if self.cols % 2: # odd number of cols
@@ -125,10 +125,10 @@ class Bitmap(list):
                 
 
         def to_unicode(self):
-                '''
-                >>> Bitmap([[0,1,0,1],[1,1,0,1]]).to_unicode()
-                '▟▐'
-                '''
+            """
+            >>> Bitmap([[0,1,0,1],[1,1,0,1]]).to_unicode()
+            '▟▐'
+            """
                 if not self.has_even_rows_and_cols():
                         self.pad()
                 m = self.group_quadrants()

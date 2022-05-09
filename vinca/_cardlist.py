@@ -4,8 +4,10 @@ from vinca._lib import ansi
 from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
 
+from rich import print
+
 class Cardlist(list):
-        '' 
+        """"""
         ''' A Cardlist is basically just an SQL query linked to a database
         The filter, sort, findall, and slice methods build up this query
         When used as an iterator it is just a list of cards (ids) 
@@ -16,6 +18,8 @@ class Cardlist(list):
                 self._cursor = cursor   
                 self._conditions = conditions
                 self._ORDER_BY = ORDER_BY
+                # we intentionally skip calling super().__init__ because we only are calling ourselves a list
+                # so that Fire thinks we are one. We don't actually care about inheritance!
 
         # overwrite __dir__ so that we fool python FIRE
         # we don't want methods inherited from list
@@ -36,7 +40,7 @@ class Cardlist(list):
 
         @property
         def _SELECT_IDS(self):
-                'SQL Query of all card IDs. Check this first when debugging.'
+                """SQL Query of all card IDs. Check this first when debugging."""
                 return 'SELECT id FROM cards' + self._WHERE + self._ORDER_BY
 
         @property
@@ -82,38 +86,40 @@ class Cardlist(list):
                 return s
 
         def browse(self):
-                'interactively manage you collection'
+                """interactively manage you collection"""
                 Browser(self.explicit_cards_list(), self._make_basic_card, self._make_verses_card).browse()
 
         def review(self):
-                'review your cards'
+                """review your cards"""
                 due_cards = self.filter(due = True).explicit_cards_list()
                 Browser(due_cards, self._make_basic_card, self._make_verses_card).review()
 
         def tag(self, *tags):
-                'add tags to selected cards'
-                raise NotImplementedError
-                self._cursor.execute('INSERT INTO tags (card_id, tag) VALUES (card_id, ?)')
+                """add tags to selected cards"""
+                for tag in tags:
+                        self._cursor.execute(f'INSERT INTO tags (card_id, tag)'
+                            f'SELECT id, "{tag}" from CARDS' + self._WHERE)
+                self._cursor.connection.commit()
+                print(self._cursor.rowcount, 'tags added')
                                 
         def remove_tag(self, tag):
-                'remove a tag from cards '
-                raise NotImplementedError
+                """remove a tag from cards """
+                self._cursor.execute(f'DELETE FROM tags WHERE card_id IN'
+                        f'({self._SELECT_IDS}) AND tag = ?', (tag,))
+                self._cursor.connection.commit()
+                print(self._cursor.rowcount, 'tags removed')
 
         def tags(self):
-                'all tags in this cardlist '
+                """all tags in this cardlist """
                 self._cursor.execute(f'SELECT tag FROM tags JOIN '
                     f'({self._SELECT_IDS}) ON tags.card_id=id GROUP BY tag')
                 return [row[0] for row in self._cursor.fetchall()]
 
         def count(self):
-                'simple summary statistics'
+                """simple summary statistics"""
                 return {'total':  len(self),
                         'due':    len(self.filter(due=True)),
                         'new':    len(self.filter(new=True))}
-
-        def postpone(self, n=1):
-                'reschedule cards n days after today (default 1)'
-                raise NotImplementedError
 
         def filter(self, *,
                    tag = None,
@@ -121,7 +127,7 @@ class Cardlist(list):
                    due_after=0, due_before=0,
                    deleted=False, due=False, new=False, verses=False,
                    invert=False):
-                'filter the collection'
+                """filter the collection"""
 
                 TODAY = today() # today's juliandate as an int e.g. 2457035
 
@@ -157,7 +163,7 @@ class Cardlist(list):
                 return new_cardlist
 
         def find(self, pattern):
-                ''' return the first card containing a search pattern '''
+                """ return the first card containing a search pattern """
                 try:
                         return self.findall(pattern).sort('seen')[1]
                 except:
@@ -165,14 +171,14 @@ class Cardlist(list):
 
 
         def findall(self, pattern):
-                ''' return all cards containing a search pattern '''
+                """ return all cards containing a search pattern """
                 new_cardlist = self._copy()
                 new_cardlist._conditions += [f"(front_text LIKE '%{pattern}%' \
                         OR back_text LIKE '%{pattern}%')"]
                 return new_cardlist
 
         def sort(self, criterion=None, *, reverse=False):
-                ''' sort the collection: [due | seen | created | time | random] '''
+                """ sort the collection: [due | seen | created | time | random] """
                 # E.g. we want to see the cards that have taken the most time first
                         
                 crit_dict = {'due': ' ORDER BY due_date',
@@ -194,7 +200,7 @@ class Cardlist(list):
                 
 
         def time(self):
-                ''' total time spend studying these cards '''
+                """ total time spend studying these cards """
                 self._cursor.execute(f'SELECT sum(seconds) FROM ({self._SELECT_IDS})'
                         ' LEFT JOIN reviews ON id=card_id')
                 minutes = self._cursor.fetchone()[0] // 60
@@ -202,34 +208,48 @@ class Cardlist(list):
                 return f'{hours:0>2d}:{minutes:0>2d}'
 
         def _make_basic_card(self):
-                ' make a basic question and answer flashcard '
+                """ make a basic question and answer flashcard """
                 card = Card._new_card(self._cursor)
                 card.edit()
                 return card
+        basic = _make_basic_card
 
         def _make_verses_card(self):
-                ' make a verses card: for recipes, poetry, oratory, instructions '
+                """ make a verses card: for recipes, poetry, oratory, instructions """
                 card = Card._new_card(self._cursor)
                 card.verses = True
                 card.edit()
                 return card
+        verses = _make_verses_card
 
         def delete(self):
-                print(f'delete {len(self)} cards? y/n')
+                print(f'[bold]delete {len(self)} cards? y/n')
                 if readkey() != 'y':
-                        return 'aborted'
-                for card in self.explicit_cards_list():
-                        card.delete()
+                        print('[red]aborted')
+                        return
+                self._cursor.execute(f'UPDATE cards SET deleted = 1' + self._WHERE)
+                self._cursor.connection.commit()
+                print(len(self), 'cards deleted')
+
+        def restore(self):
+                deleted_cards = self.filter(deleted=True)
+                if len(deleted_cards) == 0:
+                        print('none of these cards are deleted')
+                self._cursor.execute(f'UPDATE cards SET deleted = 0' + deleted_cards._WHERE)
+                self._cursor.connection.commit()
+                print(self._cursor.rowcount, 'cards restored')
 
         def purge(self):
-                ' permanently remove deleted cards '
+                """ permanently remove deleted cards """
                 deleted_cards = self.filter(deleted=True)
                 n = len(deleted_cards)
                 if n == 0:
-                        return 'no cards to delete'
-                print(f'purge {len(deleted_cards)} cards? y/n')
+                        print('no cards to delete')
+                        return
+                print(f'[bold]permanently remove {len(deleted_cards)} cards?! y/n')
                 if readkey() != 'y':
-                        return 'aborted'
+                        print('[red]aborted')
+                        return
                 deleted_cards._cursor.execute("DELETE FROM cards" + deleted_cards._WHERE)
-                print(f'{deleted_cards._cursor.rowcount} cards deleted')
+                print(f'{deleted_cards._cursor.rowcount} cards purged')
                 deleted_cards._cursor.connection.commit()

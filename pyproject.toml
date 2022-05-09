@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vinca"
-version = "2.1.0"
+version = "2.2.0"
 description = "Spaced Repetition CLI"
 authors = ["Oscar Laird <olaird25@gmail.com>"]
 license = "MIT"
@@ -9,6 +9,7 @@ license = "MIT"
 python = "^3.8"
 fire = "^0.4.0"
 prompt-toolkit = "^3.0.29"
+rich = "^12.4.1"
 
 [tool.poetry.scripts]
 vinca = "vinca:run"

@@ -1,4 +1,3 @@
-import re
 import functools
 
 # ansi codes let us control the terminal just
@@ -40,32 +39,3 @@ def _do(n=1, cmd=None):
         print(codes[cmd]*n, end='', flush=True)
 for key in codes:
         globals()[key] = functools.partial(_do, cmd=key)
-
-def strip_ansi(text):
-        '''
-        >>> strip_ansi('the quick fox')
-        'the quick fox'
-        >>> strip_ansi('\033[1mBOLD')
-        'BOLD'
-        >>> strip_ansi('\033[?25l hidden cursor \033[?25h')
-        ' hidden cursor '
-        >>> strip_ansi('down\033E line')
-        'down line'
-        '''
-        ansi_escape = re.compile(r'''
-            \x1B  # ESC
-            (?:   # 7-bit C1 Fe (except CSI)
-                [@-Z\\-_]
-            |     # or [ for CSI, followed by a control sequence
-                \[
-                [0-?]*  # Parameter bytes
-                [ -/]*  # Intermediate bytes
-                [@-~]   # Final byte
-            )
-        ''', re.VERBOSE)
-        result = ansi_escape.sub('', text)
-        return result
-
-if __name__=='__main__':
-        import doctest
-        doctest.testmod()
