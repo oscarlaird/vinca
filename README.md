@@ -22,5 +22,5 @@
 ![vinca stats](./utils/stats.png)
 *`vinca stats`*
 
-![test](./utils/screencast.gif)
+![test](./utils/screencast.gif?)
 *test*
