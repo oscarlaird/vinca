@@ -1,19 +1,16 @@
 # vinca-SRS
 
-`VINCA` is a command-line driven spaced-repetition study tool.
-It is the command-line cousin of ANKI and Supermemo.
+`VINCA` is a command-line spaced-repetition study tool.
 
 ## Installing Vinca
 
-### Manual Installation
-- Python Fire is a requirement: run `pip install fire`.
-- Download this repository.
-- Execute `python -m fire vinca` with vinca available in the path.
-
-### Pip
 `pip install vinca`
 
-## Vinca Tutorial
+## Basic commands
 
-Refer to [the man page](https://oscarlaird.github.io/vinca-SRS/vinca.1.html) for a detailed tutorial on using vinca.
-
+ --help                full screen help                        
+ basic                 create question and answer cards        
+ review                study your cards                        
+ browse                interactively manage your cards         
+ count                 simple summary statistics               
+ tutorial review       study a tutorial deck of twenty cards   
