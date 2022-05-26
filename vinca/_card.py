@@ -99,16 +99,21 @@ def {f}(self, new_value):
         assert key in self._fields
         # if the supplied value is a filename we want
         # to use the contents of the file, not the filename itself
-        if key in self._media_fields and self._is_path(value):
-            if key in self._text_fields:
-                value = Path(value).read_text()
-            if key in self._BLOB_fields:
-                value = Path(value).read_bytes()
         self._dict[key] = value
         # commit change to card-dictionary to SQL database
         self._cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?',
                              (value, self.id))
         self._cursor.connection.commit()
+
+    def set(self, key, value):
+        # user access to __setitem__ functionality
+        # if a filename is specified as the value read the contents of that file.
+        if key in self._media_fields and self._is_path(value):
+            if key in self._text_fields:
+                value = Path(value).read_text()
+            if key in self._BLOB_fields:
+                value = Path(value).read_bytes()
+        self.__setitem__(key, value)
 
     set = __setitem__  # alias for easy cli usage
     set.__doc__ = 'set the text or image for a card: `set front_image ./diagram.png`'
@@ -356,5 +361,6 @@ def {f}(self, new_value):
     def _new_card(cls, cursor):
         cursor.execute("INSERT INTO cards DEFAULT VALUES")
         cursor.connection.commit()
-        id = cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+        id = cursor.execute("SELECT id FROM cards WHERE"
+                            " rowid = last_insert_rowid()").fetchone()[0]
         return cls(id, cursor)

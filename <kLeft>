@@ -155,13 +155,15 @@ class Cardlist(list):
 
                 # assert that at least one filter predicate has been specified
                 if all([p is None for p,c in parameters_conditions]):
-                        return '''Examples:
-filter --due                    ` due cards                  
-filter --due-before -7            overdue by more than a week
-filter --contains-images          cards containing images                           
-filter --tag TAG --invert         cards not containing TAG   
+                        print('''
+Examples:
+filter --due                due cards                  
+filter --due-before -7      overdue by more than a week
+filter --contains-images                               
+filter --tag TAG --invert   cards not containing TAG   
 
-Read `filter --help` for a complete list of predicates'''
+Read "filter --help" for a complete list of predicates''')
+                        return
 
                 new_cardlist = self._copy()
                 for parameter, condition in parameters_conditions:

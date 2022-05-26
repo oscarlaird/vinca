@@ -19,7 +19,6 @@
 
 ## Screenshots
 
-### `vinca stats`
 ![vinca stats](./utils/stats.png)
 
 ### basic commands
