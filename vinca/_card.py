@@ -208,21 +208,19 @@ def {f}(self, new_value):
             return self._review_verses()
 
         with AlternateScreen():
-            ansi.light();
-            print(self.tags, '\n', sep='');
-            ansi.reset()
+            print('Recite the lines one by one. Press space to show the next line.')
+            print(f'[dim yellow italic]{" ".join(self.tags)}', '\n', sep='')
             lines = self.front_text.splitlines()
             print(f'[bold]{lines.pop(0)}')
             for line in lines:
                 char = readkey()  # press any key to continue
                 if char == 'e':
                     return edit_then_review()
-                if char in ['d', 'q']:  # exit actions to abort the review
+                if char in ['d', 'q', '\x1b']:  # exit actions to abort the review
                     return char
                 print(f'[bold]{line}')
 
             # grade the card
-            print('\n\n[END]')
             print('\n\n')
             print(help_string)
             grade = readkey()
