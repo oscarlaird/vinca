@@ -91,6 +91,8 @@ class Browser:
               'R      review                  \n'
               'E      edit                    \n'
               'T      edit tags               \n'
+              'B      create basic question   \n'
+              'V      create verses card      \n'
               'Q      quit                    \n'
               )
         exit()

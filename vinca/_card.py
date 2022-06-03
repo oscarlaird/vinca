@@ -106,6 +106,7 @@ def {f}(self, new_value):
         self._cursor.connection.commit()
 
     def set(self, key, value):
+        'set the text or image for a card: `set front_image ./diagram.png`'
         # user access to __setitem__ functionality
         # if a filename is specified as the value read the contents of that file.
         if key in self._media_fields and self._is_path(value):
@@ -114,9 +115,6 @@ def {f}(self, new_value):
             if key in self._BLOB_fields:
                 value = Path(value).read_bytes()
         self.__setitem__(key, value)
-
-    set = __setitem__  # alias for easy cli usage
-    set.__doc__ = 'set the text or image for a card: `set front_image ./diagram.png`'
 
     def __getitem__(self, key):
         if key not in self._fields:
@@ -236,17 +234,17 @@ def {f}(self, new_value):
         self._log('edit', elapsed_seconds)
 
     def _edit_basic(self):
-        self.front_text = prompt('Question:     ',
+        self.front_text = prompt('Question:   ',
                                  default=self.front_text,
                                  multiline=True, vi_mode=True,
                                  bottom_toolbar=lambda: 'press ESC-Enter to confirm')
-        self.back_text = prompt('Answer:       ',
+        self.back_text = prompt('Answer:     ',
                                 default=self.back_text,
                                 multiline=True, vi_mode=True,
                                 bottom_toolbar=lambda: 'press ESC-Enter to confirm')
 
     def _edit_verses(self):
-        self.front_text = prompt('Question:     ',
+        self.front_text = prompt('Verses:     ',
                                  default=self.front_text,
                                  multiline=True, vi_mode=True,
                                  bottom_toolbar=lambda: 'press ESC-Enter to confirm')
