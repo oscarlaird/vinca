@@ -14,20 +14,19 @@ from vinca._lib import julianday
 
 TODAY = julianday.today()  # int representing day
 
-GRADE_DICT = {'x': 'delete', 'd': 'delete',
-              'q': 'exit', '\x1b': 'exit',
+GRADE_DICT = {'\x1b[P': 'delete', 'd': 'delete', 'q': 'exit', '\x1b': 'exit',
               'p': 'preview', '0': 'preview',
               '1': 'again',
               '2': 'hard',
               '3': 'good', ' ': 'good', '\r': 'good', '\n': 'good',
               '4': 'easy'}
-RESET_ACTION_GRADES = ('create', 'again')
-STUDY_ACTION_GRADES = ('hard', 'good', 'easy')
-BUREAU_ACTION_GRADES = ('edit', 'delete', 'exit', 'preview')
+STUDY_ACTION_GRADES = ('again', 'hard', 'good', 'easy')
+BUREAU_ACTION_GRADES = ('edit', 'exit', 'preview')
 
 help_string = ('[dim]'
                'Q  [white]quit[/white]                   \n'
                'E  [white]edit[/white]                   \n'
+               'T  [white]tag[/white]                   \n'
                'D  [red]delete[/red]      \n'
                '1  [red]again[/red]       \n'
                '2  [red]hard[/red]        \n'
@@ -163,17 +162,19 @@ def {f}(self, new_value):
     def review(self):
         start = time.time()
         grade_key = self._review_verses() if self.verses else self._review_basic()
+        if grade_key in ('d','\x1b[P'):
+                self.deleted = True
         grade = GRADE_DICT.get(grade_key, 'exit')
         stop = time.time()
 
         elapsed_seconds = int(stop - start)
 
         self._log(grade, elapsed_seconds)
-        if self.last_action_grade == 'delete':
-            self.deleted = True
         self._schedule()
 
     def _review_basic(self):
+        # review the card and return the keystroke pressed by the user
+
         def edit_then_review():
             ansi.move_to_top();
             ansi.clear_to_end()
@@ -187,16 +188,20 @@ def {f}(self, new_value):
                 char = readkey()  # press any key to flip the card
                 if char == 'e':  # edit the card and then review it
                     return edit_then_review()
-                if char in ['d', 'q']:  # immediate exit actions
+                if char == 't':
+                    self.edit_tags()
+                if char in ('d', '\x1b[P', 'q', '\x1b'): # immediate exit actions
                     return char
             with DisplayImage(data_bytes=self.back_image):
                 print(f'[bold]{self.back_text}')
                 print('\n\n')
                 print(help_string)
-                grade = readkey()
-                if grade == 'e':
+                char = readkey()
+                if char == 'e':
                     return edit_then_review()
-                return grade
+                if char == 't':
+                    self.edit_tags()
+                return char
 
     def _review_verses(self):
         def edit_then_review():
@@ -212,19 +217,23 @@ def {f}(self, new_value):
             print(f'[bold]{lines.pop(0)}')
             for line in lines:
                 char = readkey()  # press any key to continue
-                if char == 'e':
+                if char == 'e':  # edit the card and then review it
                     return edit_then_review()
-                if char in ['d', 'q', '\x1b']:  # exit actions to abort the review
+                if char == 't':
+                    self.edit_tags()
+                if char in ('d', '\x1b[P', 'q', '\x1b'): # immediate exit actions
                     return char
                 print(f'[bold]{line}')
 
             # grade the card
             print('\n\n')
             print(help_string)
-            grade = readkey()
-            if grade == 'e':
+            char = readkey()
+            if char == 'e':
                 return edit_then_review()
-            return grade
+            if char == 't':
+                self.edit_tags()
+            return char
 
     def edit(self):
         start = time.time()
@@ -262,8 +271,8 @@ def {f}(self, new_value):
     @property
     def last_reset_date(self):
         date = self._cursor.execute('SELECT max(date)'
-                                    ' FROM reviews WHERE action_grade IN (?, ?) AND card_id = ?',
-                                    RESET_ACTION_GRADES + (self.id,)).fetchone()[0]
+                                    ' FROM reviews WHERE action_grade = ? AND card_id = ?',
+                                    ('again', self.id,)).fetchone()[0]
         if date is None:
             return self.create_date
         return julianday.JulianDate(date)
@@ -271,8 +280,8 @@ def {f}(self, new_value):
     @property
     def last_study_date(self):
         date = self._cursor.execute('SELECT max(date)'
-                                    ' FROM reviews WHERE action_grade IN (?, ?, ?, ?, ?) AND card_id = ?',
-                                    RESET_ACTION_GRADES + STUDY_ACTION_GRADES + (self.id,)).fetchone()[0]
+                                    ' FROM reviews WHERE action_grade IN (?, ?, ?, ?) AND card_id = ?',
+                                    STUDY_ACTION_GRADES + (self.id,)).fetchone()[0]
         if date is None:
             return self.create_date
         return julianday.JulianDate(date)
@@ -286,11 +295,11 @@ def {f}(self, new_value):
         grades_since_reset = [grade[0] for grade in \
                               list(self._cursor.execute('SELECT action_grade FROM reviews'
                                                         ' WHERE card_id = ? AND date > ?'
-                                                        ' AND action_grade IN (?, ?, ?)',
+                                                        ' AND action_grade IN (?, ?, ?, ?)',
                                                         (self.id,
                                                          self.last_reset_date) + STUDY_ACTION_GRADES).fetchall())
                               ]
-        grade_ease_dict = {'hard': 0, 'good': 1, 'easy': 2}
+        grade_ease_dict = {'again': 0, 'hard': 0, 'good': 1, 'easy': 2}
         e = [grade_ease_dict[grade] for grade in grades_since_reset]
         if not e:
             return 1
@@ -307,7 +316,7 @@ def {f}(self, new_value):
         return max(1, interval)
 
     def _calc_due_date(self):
-        if self.last_action_grade in RESET_ACTION_GRADES:
+        if self.last_action_grade == 'again':
             return self.last_reset_date
         return self.last_study_date + self.interval
 
