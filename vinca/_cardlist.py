@@ -4,8 +4,10 @@ from vinca._lib import ansi
 from vinca._lib.readkey import readkey
 from vinca._lib.julianday import today
 from vinca._statistics import Statistics
+from re import fullmatch
+import datetime
 
-from rich import print
+#from rich import print
 
 class Cardlist(list):
         """"""
@@ -72,6 +74,8 @@ class Cardlist(list):
                 # but sometimes this is quick and convenient
                 return (self[i] for i in range(1, len(self) + 1))
 
+        def __bool__(self):
+                return len(self) > 0
 
         def __len__(self):
                 self._cursor.execute(f'SELECT COUNT(*) FROM ({self._SELECT_IDS})')
@@ -134,18 +138,38 @@ class Cardlist(list):
                 # by this predicate. For example, new=False means that we will
                 # only show cards which are not new, but new=None means that
                 # we will show all cards.
-
                 TODAY = today() # today's juliandate as an int e.g. 16300 number of days since unix epoch
+
+                # preprocess dates
+                cleaned_dates = {'created_after': created_after,
+                                'created_before': due_before,
+                                     'due_after': created_after,
+                                    'due_before': due_before,}
+                # cast dates to myformat: number of days since epoch
+                for key, value in cleaned_dates.items():
+                    if value is None:
+                        continue
+                    elif type(value) is int:
+                        # a number like +7 specifies a date relative to today
+                        elapsed_days = TODAY + value
+                        cleaned_dates[key] = elapsed_days
+                    elif type(value) is str and fullmatch('[0-9]{4}-[0-9]{2}-[0-9]{2}', value): #check for iso date format
+                        date       = datetime.date.fromisoformat(value)
+                        epoch_date = datetime.date.fromisoformat('1970-01-01')
+                        elapsed_days = (date - epoch_date).days
+                        cleaned_dates[key] = elapsed_days
+                    else:
+                        raise ValueError(f'parameter {key} received unparseable value of {value}')
 
                 parameters_conditions = (
                         # tag
                         # the count(1) gives 1 if the record exists else 0
                         (tag, f"(SELECT count(1) FROM tags WHERE card_id=cards.id AND tag='{tag}')"),
                         # date conditions
-                        (created_after, f"create_date > {TODAY + (created_after or 0)}"),
-                        (created_before, f"create_date < {TODAY + (created_before or 0)}"),
-                        (due_after, f"due_date > {TODAY + (due_after or 0)}"),
-                        (due_before, f"due_date < {TODAY + (due_before or 0)}"),
+                        (cleaned_dates['created_after'],  f"create_date > {cleaned_dates['created_after']}"),
+                        (cleaned_dates['created_before'], f"create_date < {cleaned_dates['created_before']}"),
+                        (cleaned_dates['due_after'],      f"due_date    > {cleaned_dates['due_after']}"),
+                        (cleaned_dates['due_before'],     f"due_date    < {cleaned_dates['due_before']}"),
                         # boolean conditions
                         (due, f"due_date < {TODAY}"),
                         (deleted, f"deleted = 1"),
@@ -239,23 +263,22 @@ Read `filter --help` for a complete list of predicates'''
                 self._cursor.connection.commit()
                 print(self._cursor.rowcount, 'cards restored')
 
-        def purge(self):
+        def purge(self, confirm=True):
                 """ permanently remove deleted cards """
                 deleted_cards = self.filter(deleted=True)
                 n = len(deleted_cards)
                 if n == 0:
-                        print('no cards to delete')
-                        return
-                print(f'[bold]permanently remove {len(deleted_cards)} cards?! y/n')
-                if readkey() != 'y':
-                        print('[red]aborted')
-                        return
+                        return 'no cards to delete'
+                if confirm:
+                    print(f'[bold]permanently remove {len(deleted_cards)} cards?! y/n')
+                    if readkey() != 'y':
+                            return ('[red]aborted')
                 # PRAGMA... enables foreign key delete cascade
                 # When a card is deleted so are its associated tags and reviews
                 deleted_cards._cursor.execute("PRAGMA FOREIGN_KEYS = on;")
                 deleted_cards._cursor.execute("DELETE FROM cards" + deleted_cards._WHERE)
-                print(f'{deleted_cards._cursor.rowcount} cards purged')
                 deleted_cards._cursor.connection.commit()
+                return f'{deleted_cards._cursor.rowcount} cards purged'
 
         def stats(self, interval=7):
                 """ review statistics for the collection """
