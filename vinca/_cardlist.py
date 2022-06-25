@@ -126,7 +126,7 @@ class Cardlist(list):
                    tag = None,
                    created_after=None, created_before=None,
                    due_after=None, due_before=None,
-                   deleted=None, due=None, new=None, verses=None,
+                   deleted=None, due=None, new=None, card_type=None,
                    contains_images=None,
                    invert=False):
                 """filter the collection"""
@@ -135,11 +135,12 @@ class Cardlist(list):
                 # only show cards which are not new, but new=None means that
                 # we will show all cards.
 
-                TODAY = today() # today's juliandate as an int e.g. 2457035
+                TODAY = today() # today's juliandate as an int e.g. 16300 number of days since unix epoch
 
                 parameters_conditions = (
                         # tag
-                        (tag, f"(SELECT true FROM tags WHERE card_id=cards.id AND tag='{tag}')"),
+                        # the count(1) gives 1 if the record exists else 0
+                        (tag, f"(SELECT count(1) FROM tags WHERE card_id=cards.id AND tag='{tag}')"),
                         # date conditions
                         (created_after, f"create_date > {TODAY + (created_after or 0)}"),
                         (created_before, f"create_date < {TODAY + (created_before or 0)}"),
@@ -148,7 +149,7 @@ class Cardlist(list):
                         # boolean conditions
                         (due, f"due_date < {TODAY}"),
                         (deleted, f"deleted = 1"),
-                        (verses, f"verses = 1"),
+                        (card_type, f"card_type = {card_type}"),
                         (new, f"due_date = create_date"),
                         (contains_images, "front_image IS NOT NULL OR back_image IS NOT NULL"),
                 )
@@ -216,7 +217,7 @@ Read `filter --help` for a complete list of predicates'''
         def _make_verses_card(self):
                 """ make a verses card: for recipes, poetry, oratory, instructions """
                 card = Card._new_card(self._cursor)
-                card.verses = True
+                card.card_type = 'verses'
                 card.edit()
                 return card
         verses = _make_verses_card

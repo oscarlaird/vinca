@@ -1,13 +1,19 @@
-import sqlite3
-conn = sqlite3.connect(":memory:")
+import datetime
+
+def unixepoch_local():
+        return (datetime.datetime.now() - datetime.datetime(year=1970, month=1, day=1)).total_seconds()
 
 def now():
-        return conn.execute("select julianday('now','localtime') + 0.5").fetchone()[0]
+        return unixepoch_local() / 86400
+
 def today():
-        return int(now())
+        today = int(now())
+        assert today == (datetime.date.today() - datetime.date(year=1970,month=1,day=1)).days
+        return today
 
 class JulianDate(float):
         
         def __str__(self):
-            return conn.execute("select datetime(? - 0.5)", (float(self),)).fetchone()[0][:10]
+            date = datetime.date(year=1970,month=1,day=1) + datetime.timedelta(days = 1) * int(self)
+            return f'{date}     write this on the command line as {int(self) - today()}'
 

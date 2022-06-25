@@ -38,12 +38,13 @@ class Card:
     # A card is a dictionary
     # its data is loaded from SQL on the fly and saved to SQL on the fly
 
-    _bool_fields = ('deleted', 'verses')
+    _bool_fields = ('deleted',)
+    _misc_fields = ('card_type',)
     _date_fields = ('create_date', 'due_date')
     _text_fields = ('front_text', 'back_text')
     _BLOB_fields = ('front_image', 'back_image', 'front_audio', 'back_audio')
     _media_fields = _text_fields + _BLOB_fields
-    _fields = ('id',) + _date_fields + _media_fields + _bool_fields
+    _fields = ('id',) + _misc_fields + _date_fields + _media_fields + _bool_fields
 
     # let us access key-val pairs from the dictionary as simple attributes
     for f in _fields:
@@ -161,7 +162,7 @@ def {f}(self, new_value):
 
     def review(self):
         start = time.time()
-        grade_key = self._review_verses() if self.verses else self._review_basic()
+        grade_key = self._review_verses() if self.card_type=='verses' else self._review_basic()
         if grade_key in ('d','\x1b[P'):
                 self.deleted = True
         grade = GRADE_DICT.get(grade_key, 'exit')
@@ -237,7 +238,7 @@ def {f}(self, new_value):
 
     def edit(self):
         start = time.time()
-        self._edit_verses() if self.verses else self._edit_basic()
+        self._edit_verses() if self.card_type=='verses' else self._edit_basic()
         stop = time.time()
         elapsed_seconds = int(stop - start)
         self._log('edit', elapsed_seconds)
