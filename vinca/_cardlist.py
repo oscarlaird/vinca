@@ -127,6 +127,7 @@ class Cardlist(list):
                         'new':    len(self.filter(new=True))}
 
         def filter(self, *,
+                   require_parameters = True,
                    tag = None,
                    created_after=None, created_before=None,
                    due_after=None, due_before=None,
@@ -142,8 +143,8 @@ class Cardlist(list):
 
                 # preprocess dates
                 cleaned_dates = {'created_after': created_after,
-                                'created_before': due_before,
-                                     'due_after': created_after,
+                                'created_before': created_before,
+                                     'due_after': due_after,
                                     'due_before': due_before,}
                 # cast dates to myformat: number of days since epoch
                 for key, value in cleaned_dates.items():
@@ -179,7 +180,7 @@ class Cardlist(list):
                 )
 
                 # assert that at least one filter predicate has been specified
-                if all([p is None for p,c in parameters_conditions]):
+                if require_parameters and all([p is None for p,c in parameters_conditions]):
                         return '''Examples:
 filter --due                    ` due cards                  
 filter --due-before -7            overdue by more than a week

@@ -12,6 +12,8 @@ from vinca._lib.video import DisplayImage
 from vinca._lib import ansi
 from vinca._lib import julianday
 
+from vinca._scheduling import Review, History
+
 TODAY = julianday.today()  # int representing day
 
 GRADE_DICT = {'\x1b[P': 'delete', 'd': 'delete', 'q': 'exit', '\x1b': 'exit',
@@ -47,18 +49,18 @@ class Card:
     _fields = ('id',) + _misc_fields + _date_fields + _media_fields + _bool_fields
 
     # let us access key-val pairs from the dictionary as simple attributes
-    for f in _fields:
+    # these in turn reference the more complex __getitem__ and __setitem__ methods
+    for _f in _fields:
         exec(
             f'''
 @property
-def {f}(self):
-        return self["{f}"]
-@{f}.setter
-def {f}(self, new_value):
-        self["{f}"] = new_value
+def {_f}(self):
+        return self["{_f}"]
+@{_f}.setter
+def {_f}(self, new_value):
+        self["{_f}"] = new_value
 '''
         )
-    del f
 
     def __init__(self, id, cursor):
         self._cursor = cursor
@@ -94,6 +96,7 @@ def {f}(self, new_value):
         except:
             return
 
+    # commit to SQL anytime variables are changed (by editing, deleting, scheduling, etc.)
     def __setitem__(self, key, value):
         assert key != 'id', 'Card Id cannot be changed!'
         assert key in self._fields
@@ -105,9 +108,10 @@ def {f}(self, new_value):
                              (value, self.id))
         self._cursor.connection.commit()
 
+    # access __setitem__ functionality from the command line
+    # allows for setting a BLOB or text field with a filepath
     def set(self, key, value):
         'set the text or image for a card: `set front_image ./diagram.png`'
-        # user access to __setitem__ functionality
         # if a filename is specified as the value read the contents of that file.
         if key in self._media_fields and self._is_path(value):
             if key in self._text_fields:
@@ -116,6 +120,7 @@ def {f}(self, new_value):
                 value = Path(value).read_bytes()
         self.__setitem__(key, value)
 
+    # load attributes from SQL on the fly
     def __getitem__(self, key):
         if key not in self._fields:
             raise KeyError(f'Field "{key}" does not exist')
@@ -265,64 +270,13 @@ def {f}(self, new_value):
         self._cursor.connection.commit()
 
     @property
-    def last_action_grade(self):
-        return self._cursor.execute('SELECT action_grade, max(date)'
-                                    ' FROM reviews WHERE card_id = ?', (self.id,)).fetchone()[0]
-
-    @property
-    def last_reset_date(self):
-        date = self._cursor.execute('SELECT max(date)'
-                                    ' FROM reviews WHERE action_grade = ? AND card_id = ?',
-                                    ('again', self.id,)).fetchone()[0]
-        if date is None:
-            return self.create_date
-        return julianday.JulianDate(date)
-
-    @property
-    def last_study_date(self):
-        date = self._cursor.execute('SELECT max(date)'
-                                    ' FROM reviews WHERE action_grade IN (?, ?, ?, ?) AND card_id = ?',
-                                    STUDY_ACTION_GRADES + (self.id,)).fetchone()[0]
-        if date is None:
-            return self.create_date
-        return julianday.JulianDate(date)
-
-    @property
-    def ease(self):
-        # the ease is the ratio of the card's age to the next interval
-        # if ease=1 the intervals will double
-        # we calculate ease as an average of our grades
-        # consistently grading 'good' yields ease=1
-        grades_since_reset = [grade[0] for grade in \
-                              list(self._cursor.execute('SELECT action_grade FROM reviews'
-                                                        ' WHERE card_id = ? AND date > ?'
-                                                        ' AND action_grade IN (?, ?, ?, ?)',
-                                                        (self.id,
-                                                         self.last_reset_date) + STUDY_ACTION_GRADES).fetchall())
-                              ]
-        grade_ease_dict = {'again': 0, 'hard': 0, 'good': 1, 'easy': 2}
-        e = [grade_ease_dict[grade] for grade in grades_since_reset]
-        if not e:
-            return 1
-        return sum(e) / len(e)
-
-    @property
-    def interval(self):
-        # The interval for the next review is calculated from two values:
-        # ✠ The Ease
-        # ✠ The number of days between creation (or reset) and the most recent study
-        #   This is called "study maturity"
-        study_maturity = int(self.last_study_date) - int(self.last_reset_date)
-        interval = int(self.ease * study_maturity)
-        return max(1, interval)
-
-    def _calc_due_date(self):
-        if self.last_action_grade == 'again':
-            return self.last_reset_date
-        return self.last_study_date + self.interval
+    def history(self):
+        self._cursor.execute('SELECT date, action_grade, seconds FROM reviews WHERE card_id = ?',(self.id,))
+        reviews = [Review(*row) for row in self._cursor.fetchall()]
+        return History(reviews)
 
     def _schedule(self):
-        self.due_date = self._calc_due_date()
+        self.due_date = self.history.new_due_date
 
     @property
     def tags(self):
