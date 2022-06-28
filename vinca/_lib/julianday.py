@@ -15,5 +15,12 @@ class JulianDate(float):
         
         def __str__(self):
             date = datetime.date(year=1970,month=1,day=1) + datetime.timedelta(days = 1) * int(self)
-            return f'{date}     write this on the command line as {int(self) - today()}'
+            return f'{date}'
 
+        @property
+        def isoformat(self):
+            return str(self)
+
+        @property
+        def relative_date(self):
+            return int(self - today())

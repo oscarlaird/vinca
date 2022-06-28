@@ -174,7 +174,7 @@ class Cardlist(list):
                         # boolean conditions
                         (due, f"due_date < {TODAY}"),
                         (deleted, f"deleted = 1"),
-                        (card_type, f"card_type = {card_type}"),
+                        (card_type, f'''card_type = "{card_type}"'''),
                         (new, f"due_date = create_date"),
                         (contains_images, "front_image IS NOT NULL OR back_image IS NOT NULL"),
                 )
@@ -191,7 +191,7 @@ Read `filter --help` for a complete list of predicates'''
 
                 new_cardlist = self._copy()
                 for parameter, condition in parameters_conditions:
-                        if parameter is not None:
+                        if parameter is not None and parameter!='any':
                                 n = 'NOT ' if invert ^ (parameter is False) else ''
                                 new_cardlist._conditions.append(n + condition)
                 return new_cardlist

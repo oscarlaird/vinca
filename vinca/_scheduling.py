@@ -1,17 +1,26 @@
-from dataclasses import dataclass
 import time
-today = time.time() / 86400
+from vinca._lib.julianday import today, JulianDate
 
 study_grades = ('again','hard','good','easy')
 ease_dict = {None: 1, 'again': 1, 'hard': 0.3, 'good': 1, 'easy': 2}
 
-@dataclass
 class Review:
-    date: int
-    action_grade: str
-    seconds: int
 
-class History(list: list[Review]):
+    def __init__(self, date, action_grade, seconds):
+        self.date = JulianDate(date)
+        self.action_grade = action_grade
+        self.seconds = seconds
+
+class History(list):
+
+    @property
+    def time(self):
+        return sum([review.seconds for review in self])
+
+    @property
+    def human_time(self):
+            minutes, seconds = divmod(self.time, 60)
+            return f'{minutes} minutes {seconds} seconds'
 
     @property
     def first_date(self):
@@ -23,15 +32,17 @@ class History(list: list[Review]):
         return max([review.date for review in self if review.action_grade == 'again'], default = self.first_date)
 
     @property
+    def last_study(self):
+        # most recent study with a grade (i.e. not including action_grades like edit and preview)
+        return max([review for review in self if review.action_grade in study_grades], key = lambda review: review.date, default = None)
+    
+    @property
     def last_study_date(self):
-        return max([review.date for review in self if review.action_grade in study_grades], default = self.first_date)
+        return self.last_study.date if self.last_study else self.first_date
 
     @property
     def last_grade(self):
-        # most recent grade (i.e. not including action_grades like edit and preview)
-        return max([review.grade for review in self if review.action_grade in study_grades],
-                   key = lambda review: review.date,
-                   default = None)
+        return self.last_study.action_grade if self.last_study else None
 
     @property
     def ease(self):
@@ -54,7 +65,7 @@ class History(list: list[Review]):
 
     @property
     def study_maturity(self):
-        return = int(self.last_study_date) - int(self.last_reset_date)
+        return int(self.last_study_date) - int(self.last_reset_date)
 
     @property
     def new_due_date(self):
@@ -62,8 +73,13 @@ class History(list: list[Review]):
             return self.last_reset_date + 0.003 # due four minutes later
         return self.last_study_date + self.interval
 
-    def hypothetical_due_date(self, grade, date=today, seconds=10):
+    def hypothetical_due_date(self, grade, date=today(), seconds=10, relative_date=False):
         'new due date if we received a given grade.'
-        new_history = self + [Review(date, grade, seconds)]
-        return new_history.new_due_date
-        
+        new_history = History(self + [Review(date, grade, seconds)])
+        dd = new_history.new_due_date
+        if relative_date:
+            # useful for telling user how many days until
+            # due if they select a given grade
+            return JulianDate(dd).relative_date
+        return dd
+
