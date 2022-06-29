@@ -2,12 +2,12 @@ from vinca._card import Card
 from vinca._browser import Browser
 from vinca._lib import ansi
 from vinca._lib.readkey import readkey
-from vinca._lib.julianday import today
+from vinca._lib import julianday
 from vinca._statistics import Statistics
 from re import fullmatch
 import datetime
 
-#from rich import print
+from rich import print
 
 class Cardlist(list):
         """"""
@@ -16,8 +16,12 @@ class Cardlist(list):
         When used as an iterator it is just a list of cards (ids) 
         It is responsible for knowing its database, usually ~/cards.db '''
 
-        def __init__(self, cursor, conditions=['TRUE'],
-            ORDER_BY = ' ORDER BY (select max(date) from reviews where reviews.card_id=cards.id) DESC'):
+        def __init__(self, cursor, conditions=['visibility != "purged"'],
+            ORDER_BY = (" ORDER BY max("
+                        "(select max(date) from reviews where reviews.card_id=cards.id),"
+                        "(select max(date) from edits   where   edits.card_id=cards.id)"
+                        ") DESC")
+            ):
                 self._cursor = cursor   
                 self._conditions = conditions
                 self._ORDER_BY = ORDER_BY
@@ -78,7 +82,7 @@ class Cardlist(list):
                 return len(self) > 0
 
         def __len__(self):
-                self._cursor.execute(f'SELECT COUNT(*) FROM ({self._SELECT_IDS})')
+                self._cursor.execute(f'SELECT COUNT(*) FROM cards ' + self._WHERE)
                 return self._cursor.fetchone()[0]
 
         def __str__(self):
@@ -99,20 +103,30 @@ class Cardlist(list):
                 due_cards = self.filter(due = True).explicit_cards_list()
                 Browser(due_cards, self._make_basic_card, self._make_verses_card).review()
 
+        @property
+        def total_number_of_tags(self):
+                'number of tags including cards not in this cardlist'
+                return self._cursor.execute('SELECT count(*) FROM tags').fetchone()[0]
+
         def tag(self, *tags):
                 """add tags to selected cards"""
+                old_number_of_tags = self.total_number_of_tags
                 for tag in tags:
-                        self._cursor.execute(f'INSERT INTO tags (card_id, tag)'
+                        self._cursor.execute(f'INSERT INTO tag_edits (card_id, tag)'
                             f'SELECT id, "{tag}" from CARDS' + self._WHERE)
                 self._cursor.connection.commit()
-                print(self._cursor.rowcount, 'tags added')
+                tags_added = self.total_number_of_tags - old_number_of_tags
+                print(tags_added, 'tags added')
                                 
         def remove_tag(self, tag):
                 """remove a tag from cards """
-                self._cursor.execute(f'DELETE FROM tags WHERE card_id IN'
-                        f'({self._SELECT_IDS}) AND tag = ?', (tag,))
+                old_number_of_tags = self.total_number_of_tags
+                for tag in tags:
+                        self._cursor.execute(f'INSERT INTO tag_edits (card_id, tag, applied)'
+                            f'SELECT id, "{tag}", 0 from CARDS' + self._WHERE)
                 self._cursor.connection.commit()
-                print(self._cursor.rowcount, 'tags removed')
+                tags_removed = old_number_of_tags - self.total_number_of_tags
+                print(tags_removed, 'tags removed')
 
         def tags(self):
                 """all tags in this cardlist """
@@ -139,7 +153,8 @@ class Cardlist(list):
                 # by this predicate. For example, new=False means that we will
                 # only show cards which are not new, but new=None means that
                 # we will show all cards.
-                TODAY = today() # today's juliandate as an int e.g. 16300 number of days since unix epoch
+                NOW = julianday.now() # date as a float e.g. 16300.4 days since unix epoch
+                TODAY = int(NOW)
 
                 # preprocess dates
                 cleaned_dates = {'created_after': created_after,
@@ -152,9 +167,9 @@ class Cardlist(list):
                         continue
                     elif type(value) is int:
                         # a number like +7 specifies a date relative to today
-                        elapsed_days = TODAY + value
-                        cleaned_dates[key] = elapsed_days
-                    elif type(value) is str and fullmatch('[0-9]{4}-[0-9]{2}-[0-9]{2}', value): #check for iso date format
+                        cleaned_dates[key] = TODAY + value
+                    # check for iso date format
+                    elif type(value) is str and fullmatch('[0-9]{4}-[0-9]{2}-[0-9]{2}', value):
                         date       = datetime.date.fromisoformat(value)
                         epoch_date = datetime.date.fromisoformat('1970-01-01')
                         elapsed_days = (date - epoch_date).days
@@ -172,11 +187,11 @@ class Cardlist(list):
                         (cleaned_dates['due_after'],      f"due_date    > {cleaned_dates['due_after']}"),
                         (cleaned_dates['due_before'],     f"due_date    < {cleaned_dates['due_before']}"),
                         # boolean conditions
-                        (due, f"due_date < {TODAY}"),
-                        (deleted, f"deleted = 1"),
+                        (due, f"due_date < {NOW}"),
+                        (deleted, f"visibility = 'deleted'"),
                         (card_type, f'''card_type = "{card_type}"'''),
                         (new, f"due_date = create_date"),
-                        (contains_images, "front_image IS NOT NULL OR back_image IS NOT NULL"),
+                        (contains_images, "front_image_id IS NOT NULL OR back_image_id IS NOT NULL"),
                 )
 
                 # assert that at least one filter predicate has been specified
@@ -252,7 +267,8 @@ Read `filter --help` for a complete list of predicates'''
                 if readkey() != 'y':
                         print('[red]aborted')
                         return
-                self._cursor.execute(f'UPDATE cards SET deleted = 1' + self._WHERE)
+                self._cursor.execute('INSERT INTO edits (card_id, visibility) '
+                                     'SELECT id, "deleted" FROM cards ' + self._WHERE)
                 self._cursor.connection.commit()
                 print(len(self), 'cards deleted')
 
@@ -260,7 +276,8 @@ Read `filter --help` for a complete list of predicates'''
                 deleted_cards = self.filter(deleted=True)
                 if len(deleted_cards) == 0:
                         print('none of these cards are deleted')
-                self._cursor.execute(f'UPDATE cards SET deleted = 0' + deleted_cards._WHERE)
+                self._cursor.execute('INSERT INTO edits (card_id, visibility) '
+                                     'SELECT id, "visible" FROM cards ' + self._WHERE)
                 self._cursor.connection.commit()
                 print(self._cursor.rowcount, 'cards restored')
 
@@ -274,11 +291,9 @@ Read `filter --help` for a complete list of predicates'''
                     print(f'[bold]permanently remove {len(deleted_cards)} cards?! y/n')
                     if readkey() != 'y':
                             return ('[red]aborted')
-                # PRAGMA... enables foreign key delete cascade
-                # When a card is deleted so are its associated tags and reviews
-                deleted_cards._cursor.execute("PRAGMA FOREIGN_KEYS = on;")
-                deleted_cards._cursor.execute("DELETE FROM cards" + deleted_cards._WHERE)
-                deleted_cards._cursor.connection.commit()
+                self._cursor.execute('INSERT INTO edits (card_id, visibility) '
+                                     'SELECT id, "purged" FROM cards ' + deleted_cards._WHERE)
+                self._cursor.connection.commit()
                 return f'{deleted_cards._cursor.rowcount} cards purged'
 
         def stats(self, interval=7):

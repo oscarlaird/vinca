@@ -6,10 +6,13 @@ ease_dict = {None: 1, 'again': 1, 'hard': 0.3, 'good': 1, 'easy': 2}
 
 class Review:
 
-    def __init__(self, date, action_grade, seconds):
+    def __init__(self, date, grade, seconds):
         self.date = JulianDate(date)
-        self.action_grade = action_grade
+        self.grade = grade
         self.seconds = seconds
+
+    def __str__(self):
+        return f'{JulianDate(self.date).isoformat:15s}{self.grade:8s}{self.seconds}\n'
 
 class History(list):
 
@@ -29,12 +32,12 @@ class History(list):
 
     @property
     def last_reset_date(self):
-        return max([review.date for review in self if review.action_grade == 'again'], default = self.first_date)
+        return max([review.date for review in self if review.grade == 'again'], default = self.first_date)
 
     @property
     def last_study(self):
-        # most recent study with a grade (i.e. not including action_grades like edit and preview)
-        return max([review for review in self if review.action_grade in study_grades], key = lambda review: review.date, default = None)
+        # most recent study with a grade (i.e. not including grades like edit and preview)
+        return max([review for review in self if review.grade in study_grades], key = lambda review: review.date, default = None)
     
     @property
     def last_study_date(self):
@@ -42,7 +45,7 @@ class History(list):
 
     @property
     def last_grade(self):
-        return self.last_study.action_grade if self.last_study else None
+        return self.last_study.grade if self.last_study else None
 
     @property
     def ease(self):

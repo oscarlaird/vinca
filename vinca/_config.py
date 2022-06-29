@@ -1,5 +1,5 @@
 # location of the database file
-collection_path = '~/cards.db'
+collection_path = '~/learning.db'
 
 # cards with hidden_tags can only be accessed using `vinca -a ...`
 # the option flag -a stands for "all cards"

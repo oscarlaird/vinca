@@ -42,7 +42,7 @@ class Browser:
             for i, card in enumerate(visible_cards, start=self.frame):
                 if card.is_due:
                     ansi.blue()
-                if card.deleted:
+                if card.visibility=='deleted':
                     ansi.red()
                 if i == self.sel:
                     ansi.highlight()
@@ -111,8 +111,9 @@ class Browser:
             self.redraw_browser()
 
             if self.reviewing:
-                self.selected_card.review()
-                if self.selected_card.last_action_grade == 'exit':
+                # review the card
+                grade_key = self.selected_card.review()
+                if grade_key in ('d','\x1b[P','\x1b','q'):
                     # exit reviewing mode
                     self.reviewing = False
                     continue

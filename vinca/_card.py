@@ -10,43 +10,32 @@ from vinca._lib.terminal import AlternateScreen
 from vinca._lib.readkey import readkey
 from vinca._lib.video import DisplayImage
 from vinca._lib import ansi
-from vinca._lib import julianday
+from vinca._lib.julianday import JulianDate, today
 
 from vinca._scheduling import Review, History
 
-TODAY = julianday.today()  # int representing day
+TODAY = today()  # int representing day
 
-GRADE_DICT = {'\x1b[P': 'delete', 'd': 'delete', 'q': 'exit', '\x1b': 'exit',
-              'p': 'preview', '0': 'preview',
-              '1': 'again',
+GRADE_DICT = {'1': 'again',
               '2': 'hard',
               '3': 'good', ' ': 'good', '\r': 'good', '\n': 'good',
               '4': 'easy'}
 STUDY_ACTION_GRADES = ('again', 'hard', 'good', 'easy')
 BUREAU_ACTION_GRADES = ('edit', 'exit', 'preview')
 
-help_string = ('[dim]'
-               'Q  [white]quit[/white]                   \n'
-               'E  [white]edit[/white]                   \n'
-               'T  [white]tag[/white]                   \n'
-               'D  [red]delete[/red]      \n'
-               '1  [red]again[/red]       \n'
-               '2  [red]hard[/red]        \n'
-               '3  [blue]good[/blue]      \n'
-               '4  [green]easy[/green]    \n')
 
 
 class Card:
     # A card is a dictionary
     # its data is loaded from SQL on the fly and saved to SQL on the fly
 
-    _bool_fields = ('deleted',)
-    _misc_fields = ('card_type',)
+    _misc_fields = ('card_type','visibility')
     _date_fields = ('create_date', 'due_date')
     _text_fields = ('front_text', 'back_text')
-    _BLOB_fields = ('front_image', 'back_image', 'front_audio', 'back_audio')
-    _media_fields = _text_fields + _BLOB_fields
-    _fields = ('id',) + _misc_fields + _date_fields + _media_fields + _bool_fields
+    _media_id_fields = ('front_image_id', 'back_image_id', 'front_audio_id', 'back_audio_id')
+    _virtual_media_fields = ('front_image','back_image','front_audio','back_audio')
+    _media_fields = _text_fields + _virtual_media_fields
+    _fields = ('id',) + _misc_fields + _date_fields + _media_fields + _media_id_fields
 
     # let us access key-val pairs from the dictionary as simple attributes
     # these in turn reference the more complex __getitem__ and __setitem__ methods
@@ -62,6 +51,17 @@ def {_f}(self, new_value):
 '''
         )
 
+
+    @property
+    def help_string(self):
+        s =  '[dim]'
+        s += '(Q)uit    (E)dit    (T)ag    (D)elete  \n\n'
+        for i, grade in enumerate(('again','hard','good','easy'),start=1):
+            hypo_due = JulianDate(self.history.hypothetical_due_date(grade))
+            s += f'({i}) {grade:8s}+{hypo_due.relative_date} days from today\n'
+        return s
+
+
     def __init__(self, id, cursor):
         self._cursor = cursor
         self._dict = dict(id=id)
@@ -72,7 +72,7 @@ def {_f}(self, new_value):
 
     def __str__(self):
         s = ''
-        if self.deleted:
+        if self.visibility=='deleted':
             s += ansi.codes['red']
         elif self.is_due:
             s += ansi.codes['blue']
@@ -83,8 +83,8 @@ def {_f}(self, new_value):
         return s
 
     def metadata(self):
-        return {field: str(getattr(self, field)) for field in self._fields +
-                ('interval', 'ease', 'last_study_date', 'last_reset_date', 'tags')}
+        metadata = {field: str(getattr(self, field)) for field in self._fields}
+        return metadata
 
     @staticmethod
     def _is_path(arg):
@@ -96,45 +96,61 @@ def {_f}(self, new_value):
         except:
             return
 
-    # commit to SQL anytime variables are changed (by editing, deleting, scheduling, etc.)
+    # commit to SQL any variables that are changed (by editing, deleting, scheduling, etc.)
     def __setitem__(self, key, value):
         assert key != 'id', 'Card Id cannot be changed!'
         assert key in self._fields
-        # if the supplied value is a filename we want
-        # to use the contents of the file, not the filename itself
         self._dict[key] = value
         # commit change to card-dictionary to SQL database
-        self._cursor.execute(f'UPDATE cards SET {key} = ? WHERE id = ?',
-                             (value, self.id))
+        if key in self._virtual_media_fields:
+            self._cursor.execute('INSERT INTO media (content) VALUES (?);',(value,))
+            self._cursor.execute('SELECT id FROM media WHERE rowid = last_insert_rowid()')
+            media_id = self._cursor.fetchone()[0]
+            id_key = key + '_id' # change front_image to front_image_id
+            self._cursor.execute(f'INSERT INTO edits (card_id, {id_key}) VALUES (?, ?)', (self.id, media_id))
+        else:
+            self._cursor.execute(f'INSERT INTO edits (card_id, {key}) VALUES (?, ?)',(self.id, value))
         self._cursor.connection.commit()
 
     # access __setitem__ functionality from the command line
-    # allows for setting a BLOB or text field with a filepath
+    # allows for setting media or text field with a filepath
     def set(self, key, value):
         'set the text or image for a card: `set front_image ./diagram.png`'
         # if a filename is specified as the value read the contents of that file.
         if key in self._media_fields and self._is_path(value):
             if key in self._text_fields:
                 value = Path(value).read_text()
-            if key in self._BLOB_fields:
+            if key in self._virtual_media_fields:
                 value = Path(value).read_bytes()
         self.__setitem__(key, value)
 
     # load attributes from SQL on the fly
+    # and put them in self._dict for future reference
     def __getitem__(self, key):
         if key not in self._fields:
             raise KeyError(f'Field "{key}" does not exist')
         if key not in self._dict.keys():
             # load attribute from the database if we haven't yet
-            value = self._cursor.execute(f'SELECT {key} FROM cards'
-                                         ' WHERE id = ?', (self.id,)).fetchone()[0]
+            # for the special virtual field front_image
+            # we have to look up the content in the media table based on front_image_id
+            if key in self._virtual_media_fields:
+                key_id = key + '_id' # change front_image to front_image_id
+                media_id = self._cursor.execute(f'SELECT {key_id} FROM cards WHERE id = ?',(self.id,)).fetchone()[0]
+                value = None if not media_id else self._cursor.execute(f'SELECT content FROM media '
+                                                    'WHERE id = ?', (media_id,)).fetchone()[0]
+            # other keys we can query from the cards table directly
+            else:
+                value = self._cursor.execute(f'SELECT {key} FROM cards'
+                                             ' WHERE id = ?', (self.id,)).fetchone()[0]
             # preprocess certain values to cast them to better types:
             if key in self._text_fields:
                 # if SQL passes us an Integer or None
                 # this is going to cause errors
                 value = str(value or '')
+            # A JulianDate is just a wrapper class for floats
+            # which prints out as a date
             if key in self._date_fields:
-                value = julianday.JulianDate(value)
+                value = JulianDate(value)
             self._dict[key] = value
         return self._dict[key]
 
@@ -144,14 +160,17 @@ def {_f}(self, new_value):
         return 0
 
     def delete(self):
-        self.deleted = True
+        self.visibility = 'deleted';
         return 'to undo use the restore command'
 
     def _toggle_delete(self):
-        self.deleted = not self.deleted
+        if self.visibility == 'purged':
+            return
+        #raise BaseException(self.visibility=='deleted', self.visibility, 'deleted')
+        self.visibility = 'visible' if self.visibility=='deleted' else 'deleted'
 
     def restore(self):
-        self.deleted = False
+        self.visibility = 'visible'
         return 'card restored'
 
     @property
@@ -168,15 +187,15 @@ def {_f}(self, new_value):
     def review(self):
         start = time.time()
         grade_key = self._review_verses() if self.card_type=='verses' else self._review_basic()
-        if grade_key in ('d','\x1b[P'):
-                self.deleted = True
-        grade = GRADE_DICT.get(grade_key, 'exit')
         stop = time.time()
-
         elapsed_seconds = int(stop - start)
 
-        self._log(grade, elapsed_seconds)
-        self._schedule()
+        if grade_key in ('d','\x1b[P'): # 'd' or 'Delete' keys
+                self.visibility = 'deleted'
+        if grade := GRADE_DICT.get(grade_key):
+                self._log(grade=grade, seconds=elapsed_seconds)
+                self._schedule()
+        return grade_key
 
     def _review_basic(self):
         # review the card and return the keystroke pressed by the user
@@ -201,7 +220,7 @@ def {_f}(self, new_value):
             with DisplayImage(data_bytes=self.back_image):
                 print(f'[bold]{self.back_text}')
                 print('\n\n')
-                print(help_string)
+                print(self.help_string)
                 char = readkey()
                 if char == 'e':
                     return edit_then_review()
@@ -233,7 +252,7 @@ def {_f}(self, new_value):
 
             # grade the card
             print('\n\n')
-            print(help_string)
+            print(self.help_string)
             char = readkey()
             if char == 'e':
                 return edit_then_review()
@@ -264,14 +283,14 @@ def {_f}(self, new_value):
                                  multiline=True, vi_mode=True,
                                  bottom_toolbar=lambda: 'press ESC-Enter to confirm')
 
-    def _log(self, action_grade, seconds):
-        self._cursor.execute('INSERT INTO reviews (card_id, seconds, action_grade)'
-                             ' VALUES (?, ?, ?)', (self.id, seconds, action_grade))
+    def _log(self, grade, seconds):
+        self._cursor.execute('INSERT INTO reviews (card_id, seconds, grade)'
+                             ' VALUES (?, ?, ?)', (self.id, seconds, grade))
         self._cursor.connection.commit()
 
     @property
     def history(self):
-        self._cursor.execute('SELECT date, action_grade, seconds FROM reviews WHERE card_id = ?',(self.id,))
+        self._cursor.execute('SELECT date, grade, seconds FROM reviews WHERE card_id = ?',(self.id,))
         reviews = [Review(*row) for row in self._cursor.fetchall()]
         return History(reviews)
 
@@ -287,13 +306,13 @@ def {_f}(self, new_value):
         return tags
 
     def _remove_tag(self, tag):
-        self._cursor.execute('DELETE FROM tags'
-                             ' WHERE card_id = ? AND tag = ?', (self.id, tag))
+        self._cursor.execute('INSERT INTO tag_edits'
+                             ' (card_id, tag, applied) VALUES (?, ?, ?)', (self.id, tag, False))
         self._cursor.connection.commit()
 
     def _add_tag(self, tag):
         if tag not in self.tags:
-            self._cursor.execute('INSERT INTO tags'
+            self._cursor.execute('INSERT INTO tag_edits'
                                  ' (card_id, tag) VALUES (?, ?)', (self.id, tag))
             self._cursor.connection.commit()
 
@@ -319,8 +338,8 @@ def {_f}(self, new_value):
 
     @classmethod
     def _new_card(cls, cursor):
-        cursor.execute("INSERT INTO cards DEFAULT VALUES")
+        cursor.execute("INSERT INTO edits DEFAULT VALUES")
         cursor.connection.commit()
-        id = cursor.execute("SELECT id FROM cards WHERE"
+        id = cursor.execute("SELECT card_id FROM edits WHERE"
                             " rowid = last_insert_rowid()").fetchone()[0]
         return cls(id, cursor)
