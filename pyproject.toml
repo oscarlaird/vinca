@@ -1,20 +1,19 @@
 [tool.poetry]
-name = "vinca"
-version = "2.4.7"
-description = "Spaced Repetition CLI"
+name = "vinca_cli"
+version = "0.1.0"
+description = "CLI Interface for Vinca"
 authors = ["Oscar Laird <olaird25@gmail.com>"]
-license = "MIT"
-readme = "README.md"
-homepage = "https://github.com/oscarlaird/vinca-SRS"
+license = "CC0"
 
 [tool.poetry.dependencies]
+vinca_core = {path = "/home/oscar/vinca_core/", develop = true}
 python = "^3.8"
+rich = "^12.5.1"
 fire = "^0.4.0"
-prompt-toolkit = "^3.0.29"
-rich = "^12.4.1"
-
-[tool.poetry.scripts]
-vinca = "vinca:run"
+requests = "^2.28.1"
+requests-toolbelt = "^0.9.1"
+prompt-toolkit = "^3.0.30"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 
